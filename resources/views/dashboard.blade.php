@@ -7,11 +7,7 @@
     <title>Dashboard | NGO Child Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-        .dashboard-scrollbar::-webkit-scrollbar { width: 6px; }
-        .dashboard-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
-    </style>
+    @vite('resources/css/dashboard.css')
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-800 antialiased">
     <div class="min-h-screen md:flex">
