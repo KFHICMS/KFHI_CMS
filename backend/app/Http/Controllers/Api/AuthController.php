@@ -21,6 +21,7 @@ class AuthController extends Controller
 
         $user = User::where('email', $credentials['email'])->first();
 
+        // Check email/password
         if (! $user || ! Hash::check($credentials['password'], $user->password)) {
             AuditLog::create([
                 'user_id'    => $user?->id,
@@ -34,8 +35,23 @@ class AuthController extends Controller
             ]);
         }
 
+        // Check if account is active
+        if (! $user->is_active) {
+            AuditLog::create([
+                'user_id'    => $user->id,
+                'action'     => 'LOGIN_BLOCKED_INACTIVE',
+                'ip_address' => $request->ip(),
+            ]);
+
+            return response()->json([
+                'message' => 'Your account is deactivated.',
+            ], 403);
+        }
+
+        // Create authentication token
         $token = $user->createToken('auth-token')->plainTextToken;
 
+        // Log successful login
         AuditLog::create([
             'user_id'    => $user->id,
             'action'     => 'LOGIN',
@@ -79,6 +95,8 @@ class AuthController extends Controller
 
         $request->user()->currentAccessToken()->delete();
 
-        return response()->json(['message' => 'Logged out successfully']);
+        return response()->json([
+            'message' => 'Logged out successfully',
+        ]);
     }
 }

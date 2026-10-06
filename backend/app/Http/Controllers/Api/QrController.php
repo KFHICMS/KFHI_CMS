@@ -10,40 +10,48 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Contracts\Encryption\DecryptException;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+
 
 class QrController extends Controller
 {
-    // POST /api/children/{child}/qr  — generate (supersedes any old token)
-    public function generate(Request $request, Child $child)
-    {
-        // Revoke previous tokens for this child
-        QrToken::where('child_id', $child->id)->update(['is_active' => false]);
+   // POST /api/children/{child}/qr
+public function generate(Request $request, Child $child)
+{
+    // Revoke previous tokens
+    QrToken::where('child_id', $child->id)->update(['is_active' => false]);
 
-        // Random reference token — contains NO personal data
-        $reference = Str::random(40);
-        QrToken::create([
-            'child_id'  => $child->id,
-            'token'     => $reference,
-            'is_active' => true,
-        ]);
+    // Random reference (no personal data)
+    $reference = Str::random(40);
+    QrToken::create([
+        'child_id'  => $child->id,
+        'token'     => $reference,
+        'is_active' => true,
+    ]);
 
-        // Encrypt it (AES-256 via APP_KEY). THIS string goes into the QR image.
-        $encrypted = Crypt::encryptString($reference);
+    // Encrypt it, then wrap it in the scan URL the phone will open
+    $encrypted = Crypt::encryptString($reference);
+    $scanUrl   = rtrim(config('app.scan_url'), '/') . '?t=' . urlencode($encrypted);
 
-        AuditLog::create([
-            'user_id'     => $request->user()->id,
-            'action'      => 'GENERATE_QR',
-            'entity_type' => 'Child',
-            'entity_id'   => $child->id,
-            'ip_address'  => $request->ip(),
-        ]);
+    // Build a scannable QR image (SVG) from that URL
+    $svg       = QrCode::format('svg')->size(260)->margin(1)->generate($scanUrl);
+    $qrImage   = 'data:image/svg+xml;base64,' . base64_encode($svg);
 
-        return response()->json([
-            'child_id'   => $child->id,
-            'child_code' => $child->child_code,
-            'qr_token'   => $encrypted,   // encode this into the QR code
-        ]);
-    }
+    AuditLog::create([
+        'user_id'     => $request->user()->id,
+        'action'      => 'GENERATE_QR',
+        'entity_type' => 'Child',
+        'entity_id'   => $child->id,
+        'ip_address'  => $request->ip(),
+    ]);
+
+    return response()->json([
+        'child_id'   => $child->id,
+        'child_code' => $child->child_code,
+        'scan_url'   => $scanUrl,   // what the QR encodes
+        'qr_image'   => $qrImage,   // the scannable QR image (SVG data URI)
+    ]);
+}
 
     // POST /api/qr/resolve  { token }  — scan → authorized lookup
     public function resolve(Request $request)

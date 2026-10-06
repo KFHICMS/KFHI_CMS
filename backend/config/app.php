@@ -122,5 +122,7 @@ return [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
+    'scan_url' => env('CMS_SCAN_URL', env('APP_URL') . '/scan'),
+
 
 ];
