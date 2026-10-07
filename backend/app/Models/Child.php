@@ -60,5 +60,8 @@ public function visibleTo($user): array
 
     return $data;
 }
+public function benefits() { return $this->hasMany(Benefit::class); }
+public function followUps() { return $this->hasMany(FollowUp::class); }
+
 
 }
