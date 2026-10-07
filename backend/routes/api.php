@@ -7,7 +7,8 @@ use App\Http\Controllers\Api\QrController;
 use App\Http\Controllers\Api\ChildController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ProgramController;
-
+use App\Http\Controllers\Api\EventController;
+use App\Http\Controllers\Api\AttendanceController;
 // Public
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
 
@@ -43,7 +44,18 @@ Route::middleware('auth:sanctum')->group(function () {
    Route::post ('/programs',                   [ProgramController::class, 'store'])->middleware('permission:manage_programs');
    Route::put  ('/programs/{program}',         [ProgramController::class, 'update'])->middleware('permission:manage_programs');
    Route::patch('/programs/{program}/archive', [ProgramController::class, 'archive'])->middleware('permission:manage_programs');
+   
+   //event
+   Route::get ('/events',          [EventController::class, 'index']);
+   Route::get ('/events/{event}',  [EventController::class, 'show']);
+   Route::post('/events',          [EventController::class, 'store'])->middleware('permission:manage_programs');
+   Route::put ('/events/{event}',  [EventController::class, 'update'])->middleware('permission:manage_programs');
+  
+   //attendance
+  Route::post('/events/{event}/attendance/scan', [AttendanceController::class, 'scan'])
+    ->middleware('permission:record_attendance');
 
+  Route::get('/events/{event}/attendance', [AttendanceController::class, 'index']);
 
 });
 

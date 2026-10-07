@@ -70,13 +70,15 @@ class RolePermissionSeeder extends Seeder
             'record_attendance', 'record_benefits', 'record_notes',
         ]);
 
-        // SURVEY ENUMERATOR — temporary, CARP data collection only
+      // SURVEY ENUMERATOR — temporary, CARP data collection + attendance
         $enumerator = Role::firstOrCreate(['name' => 'survey_enumerator']);
         $enumerator->syncPermissions([
-            'view_children',   // identify the child only (basic fields)
-            'scan_qr',         // scan to find the right child
-            'submit_carp',     // submit collected child + guardian survey data
+        'view_children',
+        'scan_qr',
+        'submit_carp',
+        'record_attendance',   // ← added: enumerators can now mark attendance
         ]);
+
 
         // 3. Default admin user for testing (DEV ONLY — change before production)
         $adminUser = User::firstOrCreate(
