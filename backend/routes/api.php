@@ -9,6 +9,9 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ProgramController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\AttendanceController;
+use App\Http\Controllers\Api\AuditLogController;
+use App\Http\Controllers\Api\ReportController;
+
 // Public
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
 
@@ -56,6 +59,17 @@ Route::middleware('auth:sanctum')->group(function () {
     ->middleware('permission:record_attendance');
 
   Route::get('/events/{event}/attendance', [AttendanceController::class, 'index']);
+
+
+  // Audit log — admin only
+  Route::get('/audit-logs', [AuditLogController::class, 'index'])->middleware('permission:view_audit_logs');
+
+  // Reports — admin + child officer
+  Route::get('/reports/summary',       [ReportController::class, 'summary'])->middleware('permission:view_reports');
+  Route::get('/reports/registrations', [ReportController::class, 'registrations'])->middleware('permission:view_reports');
+  Route::get('/reports/participation', [ReportController::class, 'participation'])->middleware('permission:view_reports');
+  Route::get('/reports/benefits',      [ReportController::class, 'benefits'])->middleware('permission:view_reports');
+
 
 });
 
