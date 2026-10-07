@@ -30,6 +30,6 @@ class DashboardController extends Controller
         // Fetch messages for the authenticated user (admin)
         $messages = Message::with('sender')->where('receiver_id', Auth::id())->orderBy('created_at', 'desc')->get();
 
-        return view('dashboard', compact('stats', 'chartData', 'messages'));
+        return view('admin.dashboard', compact('stats', 'chartData', 'messages'));
     }
 }

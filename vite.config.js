@@ -8,9 +8,9 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/css/app.css',
-                'resources/css/dashboard.css',
+                'resources/css/admin/dashboard.css',
                 'resources/js/app.js',
-                'resources/js/dashboard.js',
+                'resources/js/admin/dashboard.js',
             ],
             refresh: true,
             fonts: [

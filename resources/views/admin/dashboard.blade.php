@@ -7,7 +7,7 @@
     <title>Dashboard | NGO Child Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    @vite(['resources/css/dashboard.css', 'resources/js/dashboard.js'])
+    @vite(['resources/css/admin/dashboard.css', 'resources/js/admin/dashboard.js'])
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-800 antialiased">
     <div class="min-h-screen md:flex">
