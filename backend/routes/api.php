@@ -9,6 +9,9 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ProgramController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\AttendanceController;
+use App\Http\Controllers\Api\BenefitController;
+use App\Http\Controllers\Api\FollowUpController;
+
 // Public
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
 
@@ -60,6 +63,22 @@ Route::middleware('auth:sanctum')->group(function () {
   //view_reports lets admin and child_officer export
   Route::get('/events/{event}/attendance/export', [AttendanceController::class, 'export'])
     ->middleware('permission:view_reports');
+
+   //benifits
+  Route::get ('/benefit-types', [BenefitController::class, 'types']);
+  Route::post('/benefit-types', [BenefitController::class, 'storeType'])->middleware('permission:manage_benefits');
+  Route::post('/benefits',      [BenefitController::class, 'store'])->middleware('permission:record_benefits');
+  Route::get ('/children/{child}/benefits', [BenefitController::class, 'childHistory']);
+
+  
+  //follow-ups
+  Route::get   ('/follow-ups',                       [FollowUpController::class, 'index'])->middleware('permission:manage_followups');
+  Route::post  ('/children/{child}/follow-ups',      [FollowUpController::class, 'store'])->middleware('permission:manage_followups');
+  Route::get   ('/children/{child}/follow-ups',      [FollowUpController::class, 'childHistory']);
+  Route::patch ('/follow-ups/{followUp}/complete',   [FollowUpController::class, 'complete'])->middleware('permission:manage_followups');
+  Route::put   ('/follow-ups/{followUp}',            [FollowUpController::class, 'update'])->middleware('permission:manage_followups');
+
+
 
 });
 
