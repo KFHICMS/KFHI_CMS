@@ -56,6 +56,10 @@ Route::middleware('auth:sanctum')->group(function () {
     ->middleware('permission:record_attendance');
 
   Route::get('/events/{event}/attendance', [AttendanceController::class, 'index']);
+  
+  //view_reports lets admin and child_officer export
+  Route::get('/events/{event}/attendance/export', [AttendanceController::class, 'export'])
+    ->middleware('permission:view_reports');
 
 });
 

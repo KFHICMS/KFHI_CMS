@@ -74,4 +74,54 @@ class AttendanceController extends Controller
             'records' => $list,
         ]);
     }
+
+     // GET /api/events/{event}/attendance/export  → downloads a CSV
+    public function export(Request $request, Event $event)
+    {
+        $filename = 'attendance_' . preg_replace('/[^A-Za-z0-9]+/', '_', $event->name)
+                . '_' . date('Ymd_His') . '.csv';
+
+        // One row per child (the unique event_id+child_id constraint prevents duplicates)
+        $records = $event->attendances()
+            ->with('child:id,child_code,full_name')
+            ->orderBy('created_at')
+            ->get();
+
+        // Audit the export
+        AuditLog::create([
+            'user_id'     => $request->user()->id,
+            'action'      => 'EXPORT_ATTENDANCE',
+            'entity_type' => 'Event',
+            'entity_id'   => $event->id,
+            'ip_address'  => $request->ip(),
+        ]);
+
+        $headers = [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ];
+
+        $callback = function () use ($records, $event) {
+            $out = fopen('php://output', 'w');
+
+            // Column headers
+            fputcsv($out, ['Child Code', 'Child Name', 'Status', 'Marked At', 'Event']);
+
+            // Data rows (clean, no redundancy)
+            foreach ($records as $a) {
+                fputcsv($out, [
+                    $a->child->child_code ?? '',
+                    $a->child->full_name  ?? '',
+                    $a->status,
+                    optional($a->created_at)->format('Y-m-d H:i'),
+                    $event->name,
+                ]);
+            }
+
+            fclose($out);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
 }
