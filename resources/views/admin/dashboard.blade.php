@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Dashboard | NGO Child Management System</title>
+    <title>Dashboard | KFHI Child Management System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -14,13 +14,13 @@
     <div class="min-h-screen md:flex">
         <div id="sidebarBackdrop" class="fixed inset-0 z-30 hidden bg-slate-950/50 md:hidden" aria-hidden="true"></div>
 
-        <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 flex w-72 -translate-x-full flex-col bg-emerald-950 text-white transition-transform duration-300 md:sticky md:top-0 md:h-screen md:translate-x-0">
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 flex w-72 -translate-x-full flex-col bg-emerald-950 text-white transition-transform duration-300 md:sticky md:top-0 md:h-screen md:flex-none md:translate-x-0 md:transition-[width] md:duration-300">
             <a href="{{ route('dashboard') }}" class="flex h-20 items-center gap-3 border-b border-white/10 px-7">
                 <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-400 text-xl text-emerald-950">
                     <i class="fa-solid fa-seedling"></i>
                 </span>
                 <span>
-                    <span class="block text-sm font-extrabold tracking-[0.12em]">NGO CHILD</span>
+                    <span class="block text-sm font-extrabold tracking-[0.12em]">KFHI CHILD</span>
                     <span class="mt-0.5 block text-xs font-medium tracking-wider text-emerald-300">MANAGEMENT SYSTEM</span>
                 </span>
             </a>
@@ -66,10 +66,8 @@
         <main class="min-w-0 flex-1">
             <header class="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur sm:px-6 lg:px-10">
                 <div class="flex items-center gap-3">
-                    <button id="sidebarToggle" type="button" aria-label="Open navigation" aria-expanded="false" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50 md:hidden">
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                        </svg>
+                    <button id="sidebarToggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50">
+                        <i id="sidebarToggleIcon" class="fa-solid fa-bars" aria-hidden="true"></i>
                     </button>
                     <div>
                         <p class="text-xs font-medium text-slate-400">Workspace / Overview</p>

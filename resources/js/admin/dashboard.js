@@ -13,17 +13,27 @@ window.setInterval(updateDashboardGreeting, 60 * 1000);
 const sidebar = document.getElementById('sidebar');
 const sidebarBackdrop = document.getElementById('sidebarBackdrop');
 const sidebarToggle = document.getElementById('sidebarToggle');
+const sidebarToggleIcon = document.getElementById('sidebarToggleIcon');
+const desktopViewport = window.matchMedia('(min-width: 768px)');
 
 function setSidebarOpen(isOpen) {
     sidebar.classList.toggle('-translate-x-full', !isOpen);
-    sidebarBackdrop.classList.toggle('hidden', !isOpen);
+    sidebar.classList.toggle('md:w-0', !isOpen && desktopViewport.matches);
+    sidebar.classList.toggle('md:overflow-hidden', !isOpen && desktopViewport.matches);
+    sidebarBackdrop.classList.toggle('hidden', !isOpen || desktopViewport.matches);
     sidebarToggle.setAttribute('aria-expanded', String(isOpen));
+    sidebarToggle.setAttribute('aria-label', isOpen ? 'Close navigation' : 'Open navigation');
+    sidebarToggleIcon.classList.toggle('fa-bars', !isOpen);
+    sidebarToggleIcon.classList.toggle('fa-xmark', isOpen);
 }
+
+setSidebarOpen(desktopViewport.matches);
 
 sidebarToggle.addEventListener('click', () => {
     setSidebarOpen(sidebarToggle.getAttribute('aria-expanded') !== 'true');
 });
 sidebarBackdrop.addEventListener('click', () => setSidebarOpen(false));
+desktopViewport.addEventListener('change', (event) => setSidebarOpen(event.matches));
 
 const replyModal = document.getElementById('replyModal');
 
@@ -66,11 +76,22 @@ new window.Chart(document.getElementById('donutChart'), {
         }]
     },
     options: {
+        devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
         responsive: true,
         maintainAspectRatio: false,
         cutout: '68%',
         plugins: {
-            legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', padding: 18 } }
+            legend: {
+                position: 'bottom',
+                labels: {
+                    color: '#475569',
+                    font: { family: 'Inter, ui-sans-serif, system-ui, sans-serif', size: 13, weight: '500' },
+                    usePointStyle: true,
+                    pointStyle: 'circle',
+                    pointStyleWidth: 10,
+                    padding: 18
+                }
+            }
         }
     }
 });
@@ -89,6 +110,7 @@ new window.Chart(document.getElementById('barGraph'), {
         }]
     },
     options: {
+        devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
         responsive: true,
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },

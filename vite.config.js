@@ -9,8 +9,10 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/css/admin/dashboard.css',
+                'resources/css/child_officer/childdashboard.css',
                 'resources/js/app.js',
                 'resources/js/admin/dashboard.js',
+                'resources/js/child_officer/childdashboard.js',
             ],
             refresh: true,
             fonts: [
