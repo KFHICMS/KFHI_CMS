@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ProgramController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\AttendanceController;
+use App\Http\Controllers\Api\AuditLogController;
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\BenefitController;
 use App\Http\Controllers\Api\FollowUpController;
 
@@ -78,6 +80,17 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::patch ('/follow-ups/{followUp}/complete',   [FollowUpController::class, 'complete'])->middleware('permission:manage_followups');
   Route::put   ('/follow-ups/{followUp}',            [FollowUpController::class, 'update'])->middleware('permission:manage_followups');
 
+
+
+
+  // Audit log — admin only
+  Route::get('/audit-logs', [AuditLogController::class, 'index'])->middleware('permission:view_audit_logs');
+
+  // Reports — admin + child officer
+  Route::get('/reports/summary',       [ReportController::class, 'summary'])->middleware('permission:view_reports');
+  Route::get('/reports/registrations', [ReportController::class, 'registrations'])->middleware('permission:view_reports');
+  Route::get('/reports/participation', [ReportController::class, 'participation'])->middleware('permission:view_reports');
+  Route::get('/reports/benefits',      [ReportController::class, 'benefits'])->middleware('permission:view_reports');
 
 
 });

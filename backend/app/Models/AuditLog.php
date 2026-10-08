@@ -15,4 +15,7 @@ class AuditLog extends Model
     protected $casts = [
         'created_at' => 'datetime',
     ];
+    
+    public function user() { return $this->belongsTo(\App\Models\User::class); }
+
 }
