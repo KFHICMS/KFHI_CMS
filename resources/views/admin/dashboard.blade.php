@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Dashboard | NGO Child Management System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     @vite(['resources/css/admin/dashboard.css', 'resources/js/admin/dashboard.js'])
@@ -15,7 +16,9 @@
 
         <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 flex w-72 -translate-x-full flex-col bg-emerald-950 text-white transition-transform duration-300 md:sticky md:top-0 md:h-screen md:translate-x-0">
             <a href="{{ route('dashboard') }}" class="flex h-20 items-center gap-3 border-b border-white/10 px-7">
-                <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-400 text-xl">🌱</span>
+                <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-400 text-xl text-emerald-950">
+                    <i class="fa-solid fa-seedling"></i>
+                </span>
                 <span>
                     <span class="block text-sm font-extrabold tracking-[0.12em]">NGO CHILD</span>
                     <span class="mt-0.5 block text-xs font-medium tracking-wider text-emerald-300">MANAGEMENT SYSTEM</span>
@@ -26,22 +29,22 @@
                 <p class="px-3 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-400">Workspace</p>
                 <nav class="mt-3 space-y-1.5" aria-label="Main navigation">
                     <a href="{{ route('dashboard') }}" aria-current="page" class="flex items-center gap-3 rounded-xl bg-emerald-800 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-950/20">
-                        <span aria-hidden="true">▦</span> Dashboard
+                        <span aria-hidden="true" class="inline-flex h-4 w-4 items-center justify-center"><i class="fa-solid fa-gauge-high text-xs"></i></span> Dashboard
                     </a>
                     <a href="#" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-emerald-100/80 transition hover:bg-white/10 hover:text-white">
-                        <span aria-hidden="true">♙</span> User Management
+                        <span aria-hidden="true" class="inline-flex h-4 w-4 items-center justify-center"><i class="fa-solid fa-users text-xs"></i></span> User Management
                     </a>
                     <a href="#" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-emerald-100/80 transition hover:bg-white/10 hover:text-white">
-                        <span aria-hidden="true">♡</span> Children
+                        <span aria-hidden="true" class="inline-flex h-4 w-4 items-center justify-center"><i class="fa-solid fa-child-reaching text-xs"></i></span> Children
                     </a>
                     <a href="#" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-emerald-100/80 transition hover:bg-white/10 hover:text-white">
-                        <span aria-hidden="true">▤</span> Programs
+                        <span aria-hidden="true" class="inline-flex h-4 w-4 items-center justify-center"><i class="fa-solid fa-folder-open text-xs"></i></span> Programs
                     </a>
                     <a href="#" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-emerald-100/80 transition hover:bg-white/10 hover:text-white">
-                        <span aria-hidden="true">✓</span> Activities
+                        <span aria-hidden="true" class="inline-flex h-4 w-4 items-center justify-center"><i class="fa-solid fa-list-check text-xs"></i></span> Activities
                     </a>
                     <a href="#" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-emerald-100/80 transition hover:bg-white/10 hover:text-white">
-                        <span aria-hidden="true">▥</span> Reports
+                        <span aria-hidden="true" class="inline-flex h-4 w-4 items-center justify-center"><i class="fa-solid fa-chart-column text-xs"></i></span> Reports
                     </a>
                 </nav>
             </div>
@@ -92,7 +95,7 @@
                                 $greeting = $hour < 12 ? 'Good morning' : ($hour < 17 ? 'Good afternoon' : 'Good evening');
                             @endphp
                             <p class="text-sm font-semibold text-emerald-200">Your impact at a glance</p>
-                            <h2 class="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl"><span id="dashboardGreeting">{{ $greeting }}</span>, Admin! <span aria-hidden="true">👋</span></h2>
+                            <h2 class="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl"><span id="dashboardGreeting">{{ $greeting }}</span>, Admin! <span aria-hidden="true" class="inline-block text-emerald-100"><i class="fa-solid fa-hand-wave"></i></span></h2>
                             <p class="mt-2 max-w-xl text-sm leading-6 text-emerald-50/80">Here’s your complete NGO system overview. Thank you for helping every child thrive.</p>
                         </div>
                         <div class="shrink-0 rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
@@ -105,7 +108,7 @@
                 <section aria-label="Key statistics" class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     <article class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                         <div class="flex items-start justify-between">
-                            <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-xl">👶</span>
+                            <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-xl text-emerald-700"><i class="fa-solid fa-child"></i></span>
                             <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">Children</span>
                         </div>
                         <p class="mt-5 text-3xl font-extrabold tracking-tight text-slate-900">{{ number_format($stats['total_children']) }}</p>
@@ -114,7 +117,7 @@
 
                     <article class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                         <div class="flex items-start justify-between">
-                            <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-xl">📁</span>
+                            <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-xl text-amber-700"><i class="fa-solid fa-folder-open"></i></span>
                             <span class="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">Programs</span>
                         </div>
                         <p class="mt-5 text-3xl font-extrabold tracking-tight text-slate-900">{{ number_format($stats['active_programs']) }}</p>
@@ -123,7 +126,7 @@
 
                     <article class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                         <div class="flex items-start justify-between">
-                            <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-50 text-xl">👥</span>
+                            <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-50 text-xl text-sky-700"><i class="fa-solid fa-user-group"></i></span>
                             <span class="rounded-full bg-sky-50 px-2.5 py-1 text-[11px] font-semibold text-sky-700">Team</span>
                         </div>
                         <p class="mt-5 text-3xl font-extrabold tracking-tight text-slate-900">{{ number_format($stats['officers']) }}</p>
@@ -132,7 +135,7 @@
 
                     <article class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                         <div class="flex items-start justify-between">
-                            <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-50 text-xl">📊</span>
+                            <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-50 text-xl text-violet-700"><i class="fa-solid fa-chart-line"></i></span>
                             <span class="rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-semibold text-violet-700">This month</span>
                         </div>
                         <p class="mt-5 text-3xl font-extrabold tracking-tight text-slate-900">{{ number_format($stats['activities']) }}</p>
@@ -177,7 +180,7 @@
                                 </div>
                             @empty
                                 <div class="flex h-48 flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-5 text-center">
-                                    <span class="text-2xl" aria-hidden="true">✉️</span>
+                                    <span class="text-2xl text-slate-400" aria-hidden="true"><i class="fa-solid fa-envelope-open-text"></i></span>
                                     <p class="mt-3 text-sm font-semibold text-slate-700">All caught up</p>
                                     <p class="mt-1 text-xs text-slate-500">New messages from staff will appear here.</p>
                                 </div>
@@ -192,19 +195,19 @@
                         </div>
                         <div class="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <a href="#" class="group flex items-center gap-4 rounded-xl border border-slate-200 p-4 transition hover:border-emerald-300 hover:bg-emerald-50/60">
-                                <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-xl text-emerald-700 transition group-hover:bg-emerald-200">+</span>
+                                <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-xl text-emerald-700 transition group-hover:bg-emerald-200"><i class="fa-solid fa-user-plus"></i></span>
                                 <span><span class="block text-sm font-semibold text-slate-800">Add a child</span><span class="mt-1 block text-xs text-slate-500">Register a child in the system</span></span>
                             </a>
                             <a href="#" class="group flex items-center gap-4 rounded-xl border border-slate-200 p-4 transition hover:border-amber-300 hover:bg-amber-50/60">
-                                <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 text-xl transition group-hover:bg-amber-200">📁</span>
+                                <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 text-xl text-amber-700 transition group-hover:bg-amber-200"><i class="fa-solid fa-folder-plus"></i></span>
                                 <span><span class="block text-sm font-semibold text-slate-800">Create a program</span><span class="mt-1 block text-xs text-slate-500">Plan a new support program</span></span>
                             </a>
                             <a href="#" class="group flex items-center gap-4 rounded-xl border border-slate-200 p-4 transition hover:border-sky-300 hover:bg-sky-50/60">
-                                <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-100 text-xl transition group-hover:bg-sky-200">📋</span>
+                                <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-100 text-xl text-sky-700 transition group-hover:bg-sky-200"><i class="fa-solid fa-clipboard-list"></i></span>
                                 <span><span class="block text-sm font-semibold text-slate-800">Create an activity</span><span class="mt-1 block text-xs text-slate-500">Record a new program activity</span></span>
                             </a>
                             <a href="#" class="group flex items-center gap-4 rounded-xl border border-slate-200 p-4 transition hover:border-violet-300 hover:bg-violet-50/60">
-                                <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-100 text-xl transition group-hover:bg-violet-200">👥</span>
+                                <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-100 text-xl text-violet-700 transition group-hover:bg-violet-200"><i class="fa-solid fa-user-gear"></i></span>
                                 <span><span class="block text-sm font-semibold text-slate-800">Add an officer</span><span class="mt-1 block text-xs text-slate-500">Invite a team member</span></span>
                             </a>
                         </div>
