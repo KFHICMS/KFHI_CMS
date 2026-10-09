@@ -11,6 +11,11 @@ class Child extends Model
         'school','grade','education_status',
         'medical_info','special_requirements','emergency_contacts',
         'program','registration_date','participation_details','status',
+        'name_english', 'name_korean', 'alias', 'religion', 'area',
+        'office_code', 'office_name', 'service_state', 'sponsor_state',
+        'guardian_type', 'caregiver', 'curriculum', 'favorite_subject',
+        'pass_fail', 'dream', 'dream_description', 'favorite_activity',
+        'health', 'health_description', 'disability_type', 'disability_description'
     ];
 
     protected $casts = [
@@ -25,6 +30,14 @@ class Child extends Model
     public function guardians()
     {
         return $this->hasMany(Guardian::class);
+    }
+
+    public function getAgeAttribute()
+    {
+        if ($this->date_of_birth) {
+            return $this->date_of_birth->age;
+        }
+        return null;
     }
 
     /**
