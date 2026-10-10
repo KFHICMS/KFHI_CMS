@@ -4,20 +4,61 @@ namespace App\Http\Controllers\ChildOfficer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Child;
+use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ChildController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): View|JsonResponse
     {
         $query = Child::query();
-        
-        if ($search = $request->input('search')) {
-            $query->where('name_english', 'like', "%{$search}%")
-                  ->orWhere('child_code', 'like', "%{$search}%");
+
+        $search = $request->input('search');
+        if (is_string($search) && trim($search) !== '') {
+            $search = trim($search);
+            $query->where(function (Builder $childQuery) use ($search): void {
+                $childQuery->where('name_english', 'like', "%{$search}%")
+                    ->orWhere('full_name', 'like', "%{$search}%")
+                    ->orWhere('child_code', 'like', "%{$search}%");
+            });
         }
-        
+
+        $gender = $request->input('gender');
+        if (is_string($gender) && $gender !== '') {
+            $query->where('gender', $gender);
+        }
+
+        if ($request->expectsJson()) {
+            $children = $query->latest()->get([
+                'id',
+                'child_code',
+                'full_name',
+                'name_english',
+                'name_korean',
+                'date_of_birth',
+                'gender',
+                'area',
+                'office_name',
+                'grade',
+            ]);
+
+            return response()->json($children->map(fn (Child $child): array => [
+                'id' => $child->id,
+                'child_code' => $child->child_code,
+                'name_english' => $child->name_english ?: $child->full_name,
+                'name_korean' => $child->name_korean,
+                'age' => $child->age,
+                'gender' => $child->gender,
+                'area' => $child->area,
+                'office_name' => $child->office_name,
+                'grade' => $child->grade,
+            ]));
+        }
+
         $children = $query->paginate(15);
+
         return view('child_officer.children.index', compact('children'));
     }
 
@@ -57,15 +98,15 @@ class ChildController extends Controller
         ]);
 
         Child::create($validated);
-        
+
         return redirect()->route('child-officer.children.index')->with('success', 'Child registered successfully.');
     }
 
     public function show(Child $child)
     {
         // Generate QR code using external API since extension gd is missing
-        $qrCodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode($child->child_code);
-        
+        $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data='.urlencode($child->child_code);
+
         return view('child_officer.children.show', compact('child', 'qrCodeUrl'));
     }
 
@@ -105,13 +146,14 @@ class ChildController extends Controller
         ]);
 
         $child->update($validated);
-        
+
         return redirect()->route('child-officer.children.index')->with('success', 'Child updated successfully.');
     }
 
     public function destroy(Child $child)
     {
         $child->delete();
+
         return redirect()->route('child-officer.children.index')->with('success', 'Child deleted successfully.');
     }
 }
