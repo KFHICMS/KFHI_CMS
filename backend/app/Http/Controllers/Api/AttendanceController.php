@@ -17,6 +17,9 @@ class AttendanceController extends Controller
     public function scan(Request $request, Event $event)
     {
         $request->validate(['token' => ['required', 'string']]);
+                if ($event->status !== 'active' || ! $event->qr_attendance_enabled) {
+            return response()->json(['message' => 'Attendance is closed for this event.'], 422);
+        }
 
         // 1. Decrypt the QR token
         try {
@@ -31,6 +34,12 @@ class AttendanceController extends Controller
             return response()->json(['message' => 'QR code is invalid or revoked'], 404);
         }
         $child = $qr->child;
+                if ($child->status !== 'active') {
+            return response()->json(['message' => 'This child record is archived.'], 410);
+        }
+        if (! $child->isAccessibleTo($request->user())) {
+            return response()->json(['message' => 'This child is outside your assigned programs.'], 403);
+        }
 
         // 3. Mark attendance — firstOrCreate prevents duplicates
         $attendance = Attendance::firstOrCreate(
@@ -58,20 +67,25 @@ class AttendanceController extends Controller
     }
 
     // GET /api/events/{event}/attendance   (view the list)
-    public function index(Event $event)
-    {
-        $list = $event->attendances()->with('child:id,child_code,full_name')->latest()->get()
-            ->map(fn ($a) => [
-                'child_code' => $a->child->child_code,
-                'child_name' => $a->child->full_name,
-                'status'     => $a->status,
-                'marked_at'  => $a->created_at,
-            ]);
+public function index(Request $request, Event $event)
+{
+    $user = $request->user();
 
-        return response()->json([
-            'event'   => $event->name,
-            'present' => $list->count(),
-            'records' => $list,
+    $list = $event->attendances()
+        ->whereHas('child', fn ($q) => $q->accessibleTo($user))
+        ->with('child:id,child_code,full_name')
+        ->latest()->get()
+        ->map(fn ($a) => [
+            'child_code' => $a->child->child_code,
+            'child_name' => $a->child->full_name,
+            'status'     => $a->status,
+            'marked_at'  => $a->created_at,
         ]);
-    }
+
+    return response()->json([
+        'event'   => $event->name,
+        'present' => $list->count(),
+        'records' => $list,
+    ]);
+}
 }
