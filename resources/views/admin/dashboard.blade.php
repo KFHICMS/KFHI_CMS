@@ -31,7 +31,7 @@
                     <a href="{{ route('dashboard') }}" aria-current="page" class="flex items-center gap-3 rounded-xl bg-emerald-800 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-950/20">
                         <span aria-hidden="true" class="inline-flex h-4 w-4 items-center justify-center"><i class="fa-solid fa-gauge-high text-xs"></i></span> Dashboard
                     </a>
-                    <a href="#" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-emerald-100/80 transition hover:bg-white/10 hover:text-white">
+                    <a href="{{ asset('admin-ui/login.html') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-emerald-100/80 transition hover:bg-white/10 hover:text-white">
                         <span aria-hidden="true" class="inline-flex h-4 w-4 items-center justify-center"><i class="fa-solid fa-users text-xs"></i></span> User Management
                     </a>
                     <a href="#" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-emerald-100/80 transition hover:bg-white/10 hover:text-white">

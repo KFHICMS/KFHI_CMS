@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Staff details · KFHI Admin</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">KFHI<span>.</span></div>
+    <nav class="nav"><a href="users.html" class="active">Staff</a></nav>
+  </aside>
+
+  <div class="main">
+    <a class="back" href="users.html">← Back to staff</a>
+    <div id="msg" class="alert error" hidden></div>
+    <div id="ok" class="alert ok" hidden></div>
+
+    <div class="panel" id="pwArea" hidden>
+      <h2>New temporary password</h2>
+      <div class="pw-box"><code id="pw"></code><button class="btn" id="copyBtn" type="button">Copy</button></div>
+      <p class="hint">Shown only once. The user must change it at the next sign in.</p>
+    </div>
+
+    <div id="content"></div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const rawId = new URLSearchParams(location.search).get('id');
+  const id = rawId && /^\d+$/.test(rawId) ? rawId : null;
+  let me = null;
+
+  const fmtDateTime = (iso) => (iso ? new Date(iso).toLocaleString('en-GB') : '—');
+
+  function notify(text, kind) {
+    $('msg').hidden = true;
+    $('ok').hidden = true;
+    const box = $(kind === 'ok' ? 'ok' : 'msg');
+    box.textContent = text;
+    box.hidden = false;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function kv(pairs) {
+    const dl = el('dl', { class: 'kv' });
+    for (const [k, v] of pairs) dl.append(el('dt', {}, k), el('dd', {}, v));
+    return dl;
+  }
+
+  function render(u) {
+    const sp = u.staff_profile;
+    const isSelf = me.id === u.id;
+    const hasPhoto = !!(sp && sp.photo_url);
+
+    const fileInput = el('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp', hidden: true });
+    fileInput.addEventListener('change', () => uploadPhoto(fileInput));
+
+    const header = el('div', { class: 'panel' },
+      el('div', { class: 'profile-head' },
+        avatar(u, 'lg'),
+        el('div', {},
+          el('h1', {}, u.name),
+          el('div', { class: 'muted', style: 'margin:4px 0 8px' }, sp ? sp.position : roleLabel(u.role)),
+          el('span', { class: 'status-pill ' + (u.is_active ? 'on' : 'off') }, u.is_active ? 'Active' : 'Inactive'),
+          sp ? el('div', { class: 'actions' },
+            el('button', { class: 'btn', type: 'button', onclick: () => fileInput.click() }, hasPhoto ? 'Change photo' : 'Add photo'),
+            hasPhoto ? el('button', { class: 'btn', type: 'button', onclick: removePhoto }, 'Remove photo') : null,
+            fileInput) : null)));
+
+    const account = el('div', { class: 'panel' }, el('h2', {}, 'Account'),
+      kv([
+        ['Email', u.email],
+        ['Role', roleLabel(u.role)],
+        ['Last sign in', fmtDateTime(u.last_login_at)],
+        ['Created', fmtDateTime(u.created_at)],
+        ['Password status', u.must_change_password ? 'Temporary (must be changed)' : 'Set by the user'],
+      ]));
+
+    const staff = el('div', { class: 'panel' }, el('h2', {}, 'Staff details'),
+      sp ? kv([
+        ['Employee number', sp.emp_no],
+        ['Position', sp.position],
+        ['Phone', sp.phone],
+        ['Address', sp.address],
+        ['Date of birth', formatDate(sp.dob)],
+        ['Joined date', formatDate(sp.joined_date)],
+      ]) : el('p', { class: 'muted' }, 'No staff details yet. Click Update to add them.'));
+
+    const selfNote = isSelf ? 'You cannot do this on your own account.' : '';
+    const actions = el('div', { class: 'panel' }, el('h2', {}, 'Actions'),
+      el('div', { class: 'actions' },
+        el('a', { class: 'btn btn-primary', href: 'user-form.html?id=' + u.id }, 'Update'),
+        u.is_active
+          ? el('button', { class: 'btn btn-danger', type: 'button', disabled: isSelf, title: selfNote, onclick: () => setActive(u, false) }, 'Deactivate')
+          : el('button', { class: 'btn btn-primary', type: 'button', onclick: () => setActive(u, true) }, 'Activate'),
+        el('button', { class: 'btn', type: 'button', disabled: isSelf, title: selfNote, onclick: () => resetPassword(u) }, 'Reset password')),
+      el('p', { class: 'hint', style: 'margin-top:12px' },
+        'Staff are never deleted: deactivating keeps their history and audit log, and signs them out.'));
+
+    $('content').replaceChildren(header, account, staff, actions);
+  }
+
+  async function load() {
+    try {
+      const { data } = await api('/admin/users/' + id);
+      render(data);
+    } catch (err) {
+      $('content').replaceChildren();
+      notify(err.status === 404 ? 'Staff member not found.' : errorText(err), 'error');
+    }
+  }
+
+  async function setActive(u, active) {
+    if (!active && !confirm(`Deactivate ${u.name}? They will be signed out and cannot sign in until you activate them again.`)) return;
+    try {
+      await api(`/admin/users/${u.id}/${active ? 'activate' : 'deactivate'}`, { method: 'PATCH' });
+      await load();
+      notify(active ? 'User activated.' : 'User deactivated.', 'ok');
+    } catch (err) { notify(errorText(err), 'error'); }
+  }
+
+  async function resetPassword(u) {
+    if (!confirm(`Reset the password for ${u.name}? Their current sessions will be signed out.`)) return;
+    try {
+      const res = await api(`/admin/users/${u.id}/reset-password`, { method: 'POST' });
+      $('pw').textContent = res.temporary_password;
+      $('pwArea').hidden = false;
+      $('copyBtn').textContent = 'Copy';
+      $('copyBtn').onclick = async () => {
+        try { await navigator.clipboard.writeText(res.temporary_password); $('copyBtn').textContent = 'Copied'; }
+        catch { $('copyBtn').textContent = 'Select and copy it manually'; }
+      };
+      await load();
+      notify('Password reset. Give the new temporary password to the user.', 'ok');
+    } catch (err) { notify(errorText(err), 'error'); }
+  }
+
+  async function uploadPhoto(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { notify('The photo must be 2 MB or smaller.', 'error'); return; }
+    try {
+      const fd = new FormData();
+      fd.append('photo', file);
+      await api(`/admin/users/${id}/photo`, { method: 'POST', form: fd });
+      await load();
+      notify('Photo saved.', 'ok');
+    } catch (err) { notify(errorText(err), 'error'); }
+  }
+
+  async function removePhoto() {
+    if (!confirm('Remove this photo?')) return;
+    try {
+      await api(`/admin/users/${id}/photo`, { method: 'DELETE' });
+      await load();
+      notify('Photo removed.', 'ok');
+    } catch (err) { notify(errorText(err), 'error'); }
+  }
+
+  (async function init() {
+    me = await requireAdmin();
+    if (!me) return;
+    if (!id) { notify('Staff member not found.', 'error'); return; }
+    load();
+  })();
+</script>
+</body>
+</html>

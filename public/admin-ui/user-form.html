@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Staff form · KFHI Admin</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">KFHI<span>.</span></div>
+    <nav class="nav"><a href="users.html" class="active">Staff</a></nav>
+  </aside>
+
+  <div class="main">
+    <a class="back" href="users.html">← Back to staff</a>
+    <div id="msg" class="alert error" hidden></div>
+
+    <div class="panel" id="formPanel">
+      <h1 id="title">Add staff</h1>
+      <p class="hint" id="hint"></p>
+      <form id="form" novalidate>
+        <div class="form-grid" id="fields"></div>
+        <div class="actions">
+          <button class="btn btn-primary" type="submit" id="saveBtn">Save</button>
+          <a class="btn" href="users.html">Cancel</a>
+        </div>
+      </form>
+    </div>
+
+    <div class="panel" id="resultPanel" hidden>
+      <h1>Staff member created</h1>
+      <div id="photoNote" class="alert info" hidden></div>
+      <p class="muted" id="resultText"></p>
+      <div class="pw-box"><code id="pw"></code><button class="btn" id="copyBtn" type="button">Copy</button></div>
+      <p class="hint">This password is shown only once. The user must change it at first sign in.</p>
+      <div class="actions">
+        <a class="btn btn-primary" id="viewLink" href="users.html">View staff member</a>
+        <a class="btn" href="user-form.html">Add another</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const rawId = new URLSearchParams(location.search).get('id');
+  const editId = rawId && /^\d+$/.test(rawId) ? rawId : null;
+
+  const pad = (n) => String(n).padStart(2, '0');
+  const isoDate = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const now = new Date();
+  const maxDob = isoDate(new Date(now.getFullYear() - 18, now.getMonth(), now.getDate()));
+  const maxJoined = isoDate(now);
+
+  const FIELDS = [
+    { name: 'name',        label: 'Full name',        type: 'text',  max: 255 },
+    { name: 'email',       label: 'Email',            type: 'email', max: 255 },
+    { name: 'role',        label: 'Role',             type: 'select' },
+    { name: 'emp_no',      label: 'Employee number',  type: 'text',  max: 50 },
+    { name: 'position',    label: 'Position',         type: 'text',  max: 255 },
+    { name: 'phone',       label: 'Phone',            type: 'tel',   max: 20 },
+    { name: 'dob',         label: 'Date of birth (18+)', type: 'date', maxDate: maxDob },
+    { name: 'joined_date', label: 'Joined date',      type: 'date',  maxDate: maxJoined },
+    { name: 'address',     label: 'Address',          type: 'textarea', max: 1000, full: true },
+  ];
+  const inputs = {};
+  let photoInput = null;
+
+  function buildForm() {
+    for (const f of FIELDS) {
+      let control;
+      if (f.type === 'select') {
+        control = el('select', { name: f.name },
+          el('option', { value: '' }, 'Select a role'),
+          ...Object.entries(ROLES).map(([v, l]) => el('option', { value: v }, l)));
+      } else if (f.type === 'textarea') {
+        control = el('textarea', { name: f.name, rows: 3, maxlength: f.max });
+      } else {
+        control = el('input', { name: f.name, type: f.type, maxlength: f.max, max: f.maxDate });
+      }
+      inputs[f.name] = control;
+      $('fields').append(el('label', { class: f.full ? 'full' : '' }, f.label, control,
+        el('small', { class: 'ferr', id: 'err-' + f.name })));
+    }
+    if (!editId) {
+      photoInput = el('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp' });
+      $('fields').append(el('label', { class: 'full' }, 'Profile photo (optional, JPG/PNG/WebP, max 2 MB)', photoInput,
+        el('small', { class: 'ferr', id: 'err-photo' })));
+    }
+  }
+
+  function clearErrors() {
+    $('msg').hidden = true;
+    document.querySelectorAll('.ferr').forEach((s) => (s.textContent = ''));
+  }
+
+  function showErrors(err) {
+    if (err.errors) {
+      for (const [field, list] of Object.entries(err.errors)) {
+        const box = $('err-' + field);
+        if (box) box.textContent = list.join(' ');
+      }
+      $('msg').textContent = 'Please fix the highlighted fields.';
+    } else {
+      $('msg').textContent = errorText(err);
+    }
+    $('msg').hidden = false;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function showPassword(res, note) {
+    $('formPanel').hidden = true;
+    $('resultPanel').hidden = false;
+    $('resultText').textContent = `Give this temporary password to ${res.data.name}.`;
+    $('pw').textContent = res.temporary_password;
+    $('viewLink').href = 'user.html?id=' + res.data.id;
+    if (note) { $('photoNote').textContent = note; $('photoNote').hidden = false; }
+    $('copyBtn').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(res.temporary_password); $('copyBtn').textContent = 'Copied'; }
+      catch { $('copyBtn').textContent = 'Select and copy it manually'; }
+    });
+  }
+
+  (async function init() {
+    const me = await requireAdmin();
+    if (!me) return;
+    buildForm();
+
+    if (editId) {
+      $('title').textContent = 'Edit staff';
+      $('hint').textContent = 'Photo, deactivate and password reset are on the staff details page.';
+      try {
+        const { data: u } = await api('/admin/users/' + editId);
+        const sp = u.staff_profile || {};
+        inputs.name.value = u.name;
+        inputs.email.value = u.email;
+        inputs.role.value = u.role || '';
+        inputs.emp_no.value = sp.emp_no || '';
+        inputs.position.value = sp.position || '';
+        inputs.phone.value = sp.phone || '';
+        inputs.dob.value = sp.dob || '';
+        inputs.joined_date.value = sp.joined_date || '';
+        inputs.address.value = sp.address || '';
+        if (u.id === me.id) inputs.role.disabled = true;   // you cannot change your own role
+      } catch (err) {
+        $('formPanel').hidden = true;
+        $('msg').textContent = err.status === 404 ? 'Staff member not found.' : errorText(err);
+        $('msg').hidden = false;
+        return;
+      }
+    } else {
+      $('hint').textContent = 'A temporary password is created for the new user and shown once after saving.';
+    }
+
+    $('form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearErrors();
+
+      const body = {};
+      for (const f of FIELDS) body[f.name] = inputs[f.name].value.trim();
+
+      const file = photoInput && photoInput.files[0];
+      if (file && file.size > 2 * 1024 * 1024) {
+        $('err-photo').textContent = 'The photo must be 2 MB or smaller.';
+        return;
+      }
+
+      const btn = $('saveBtn');
+      btn.disabled = true;
+      try {
+        if (editId) {
+          await api('/admin/users/' + editId, { method: 'PUT', body });
+          location.href = 'user.html?id=' + editId;
+          return;
+        }
+        const res = await api('/admin/users', { method: 'POST', body });
+        let note = '';
+        if (file) {
+          try {
+            const fd = new FormData();
+            fd.append('photo', file);
+            await api(`/admin/users/${res.data.id}/photo`, { method: 'POST', form: fd });
+          } catch (err) {
+            note = 'The user was created, but the photo was not saved: ' + errorText(err);
+          }
+        }
+        showPassword(res, note);
+      } catch (err) {
+        showErrors(err);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  })();
+</script>
+</body>
+</html>
