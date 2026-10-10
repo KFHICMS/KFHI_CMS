@@ -23,7 +23,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get ('/me',     [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
-
+    Route::get('/roles', [UserController::class, 'roles'])->middleware('permission:manage_users');
     Route::get   ('/users',                   [UserController::class, 'index'])->middleware('permission:manage_users');
     Route::post  ('/users',                   [UserController::class, 'store'])->middleware('permission:manage_users');
     Route::put   ('/users/{user}',            [UserController::class, 'update'])->middleware('permission:manage_users');

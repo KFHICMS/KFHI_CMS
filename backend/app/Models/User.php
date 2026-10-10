@@ -25,4 +25,10 @@ class User extends Authenticatable
             'is_active'         => 'boolean',
         ];
     }
+
+    /** Programs this user is assigned to (limits what field roles can see). */
+    public function programs()
+    {
+        return $this->belongsToMany(Program::class);
+    }
 }
