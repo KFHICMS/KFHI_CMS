@@ -173,7 +173,7 @@
       try {
         if (editId) {
           await api('/admin/users/' + editId, { method: 'PUT', body });
-          location.href = 'user.html?id=' + editId;
+          location.href = adminPageUrl('user.html', { id: editId });
           return;
         }
         const res = await api('/admin/users', { method: 'POST', body });

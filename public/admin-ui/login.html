@@ -70,7 +70,7 @@
         showMsg('This panel is for administrators only.');
         return;
       }
-      location.href = 'users.html';
+      location.href = adminPageUrl('users.html');
     }
 
     if (params.get('expired')) showMsg('Your session expired. Please sign in again.', 'info');

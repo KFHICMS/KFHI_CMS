@@ -94,7 +94,7 @@
     const selfNote = isSelf ? 'You cannot do this on your own account.' : '';
     const actions = el('div', { class: 'panel' }, el('h2', {}, 'Actions'),
       el('div', { class: 'actions' },
-        el('a', { class: 'btn btn-primary', href: 'user-form.html?id=' + u.id }, 'Update'),
+        el('a', { class: 'btn btn-primary', href: adminPageUrl('user-form.html', { id: u.id }) }, 'Update'),
         u.is_active
           ? el('button', { class: 'btn btn-danger', type: 'button', disabled: isSelf, title: selfNote, onclick: () => setActive(u, false) }, 'Deactivate')
           : el('button', { class: 'btn btn-primary', type: 'button', onclick: () => setActive(u, true) }, 'Activate'),

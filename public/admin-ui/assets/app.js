@@ -1,6 +1,29 @@
 // Shared tools for all admin pages.
 const API = '/api';
 const TOKEN_KEY = 'kfhi_token';
+const IS_EMBEDDED = new URLSearchParams(location.search).get('embedded') === '1';
+
+if (IS_EMBEDDED) document.body.classList.add('embedded');
+
+function adminPageUrl(page, query = {}) {
+  const url = new URL(page, location.href);
+  for (const [key, value] of Object.entries(query)) url.searchParams.set(key, value);
+  if (IS_EMBEDDED) url.searchParams.set('embedded', '1');
+  return url.pathname + url.search + url.hash;
+}
+
+if (IS_EMBEDDED) {
+  document.addEventListener('click', (event) => {
+    const link = event.target.closest('a[href]');
+    if (!link) return;
+
+    const url = new URL(link.href, location.href);
+    if (url.origin === location.origin && url.pathname.startsWith('/admin-ui/')) {
+      url.searchParams.set('embedded', '1');
+      link.href = url.href;
+    }
+  }, true);
+}
 
 const getToken = () => sessionStorage.getItem(TOKEN_KEY);
 const setToken = (t) => sessionStorage.setItem(TOKEN_KEY, t);
@@ -41,12 +64,12 @@ async function api(path, { method = 'GET', body, form } = {}) {
   // Token expired or invalid -> back to login.
   if (res.status === 401 && token) {
     clearToken();
-    location.href = 'login.html?expired=1';
+    location.href = adminPageUrl('login.html', { expired: '1' });
     throw new ApiError('Session expired.', 401);
   }
   // Temporary password still active -> go to the change-password screen.
   if (res.status === 403 && data && data.code === 'password_change_required') {
-    location.href = 'login.html?change=1';
+    location.href = adminPageUrl('login.html', { change: '1' });
     throw new ApiError(data.message, 403);
   }
   if (!res.ok) {
@@ -69,12 +92,12 @@ async function endSession() {
 
 async function logout() {
   await endSession();
-  location.href = 'login.html';
+  location.href = adminPageUrl('login.html');
 }
 
 // Every admin page calls this first. Returns the logged-in user, or sends to login.
 async function requireAdmin() {
-  if (!getToken()) { location.href = 'login.html'; return null; }
+  if (!getToken()) { location.href = adminPageUrl('login.html'); return null; }
   const me = await api('/me');
   if (!me.permissions.includes('manage_users')) {
     await logout();

@@ -7,8 +7,10 @@ function updateDashboardGreeting() {
     dashboardGreeting.textContent = greeting;
 }
 
-updateDashboardGreeting();
-window.setInterval(updateDashboardGreeting, 60 * 1000);
+if (dashboardGreeting) {
+    updateDashboardGreeting();
+    window.setInterval(updateDashboardGreeting, 60 * 1000);
+}
 
 const sidebar = document.getElementById('sidebar');
 const sidebarBackdrop = document.getElementById('sidebarBackdrop');
@@ -38,32 +40,38 @@ desktopViewport.addEventListener('change', (event) => setSidebarOpen(event.match
 const replyModal = document.getElementById('replyModal');
 
 function closeReplyModal() {
+    if (!replyModal) return;
     replyModal.classList.add('hidden');
     replyModal.classList.remove('flex');
 }
 
-document.querySelectorAll('[data-reply-button]').forEach((button) => {
-    button.addEventListener('click', () => {
-        document.getElementById('replyReceiverId').value = button.dataset.receiverId;
-        document.getElementById('replyUserName').textContent = button.dataset.userName;
-        replyModal.classList.remove('hidden');
-        replyModal.classList.add('flex');
-        document.getElementById('replyContent').focus();
+if (replyModal) {
+    document.querySelectorAll('[data-reply-button]').forEach((button) => {
+        button.addEventListener('click', () => {
+            document.getElementById('replyReceiverId').value = button.dataset.receiverId;
+            document.getElementById('replyUserName').textContent = button.dataset.userName;
+            replyModal.classList.remove('hidden');
+            replyModal.classList.add('flex');
+            document.getElementById('replyContent').focus();
+        });
     });
-});
 
-document.getElementById('closeReplyModal').addEventListener('click', closeReplyModal);
-document.getElementById('cancelReply').addEventListener('click', closeReplyModal);
-replyModal.addEventListener('click', (event) => {
-    if (event.target === replyModal) closeReplyModal();
-});
-document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') closeReplyModal();
-});
+    document.getElementById('closeReplyModal').addEventListener('click', closeReplyModal);
+    document.getElementById('cancelReply').addEventListener('click', closeReplyModal);
+    replyModal.addEventListener('click', (event) => {
+        if (event.target === replyModal) closeReplyModal();
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeReplyModal();
+    });
+}
 
-const chartData = JSON.parse(document.getElementById('dashboard-chart-data').textContent);
+const chartDataElement = document.getElementById('dashboard-chart-data');
 
-new window.Chart(document.getElementById('donutChart'), {
+if (chartDataElement) {
+    const chartData = JSON.parse(chartDataElement.textContent);
+
+    new window.Chart(document.getElementById('donutChart'), {
     type: 'doughnut',
     data: {
         labels: chartData.pie_labels,
@@ -94,9 +102,9 @@ new window.Chart(document.getElementById('donutChart'), {
             }
         }
     }
-});
+    });
 
-new window.Chart(document.getElementById('barGraph'), {
+    new window.Chart(document.getElementById('barGraph'), {
     type: 'bar',
     data: {
         labels: chartData.bar_labels,
@@ -119,4 +127,5 @@ new window.Chart(document.getElementById('barGraph'), {
             x: { border: { display: false }, grid: { display: false } }
         }
     }
-});
+    });
+}

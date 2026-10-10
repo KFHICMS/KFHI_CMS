@@ -59,7 +59,7 @@
 
   function card(u) {
     const sp = u.staff_profile;
-    return el('a', { class: 'staff-card' + (u.is_active ? '' : ' inactive'), href: 'user.html?id=' + u.id },
+    return el('a', { class: 'staff-card' + (u.is_active ? '' : ' inactive'), href: adminPageUrl('user.html', { id: u.id }) },
       el('div', { class: 'avatar-wrap' },
         avatar(u),
         el('span', { class: 'dot ' + (u.is_active ? 'on' : 'off'), title: u.is_active ? 'Active' : 'Inactive' })),

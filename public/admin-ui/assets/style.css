@@ -75,6 +75,11 @@ input:focus, select:focus, textarea:focus {
 .alert.ok    { background: #e8f7ee; color: #14532d; box-shadow: inset 4px 4px 8px #d5e3da, inset -4px -4px 8px #ffffff; }
 [hidden] { display: none !important; }
 
+body.embedded { min-height: 100vh; background: #f8fafc; }
+body.embedded .app { grid-template-columns: minmax(0, 1fr); min-height: 100vh; }
+body.embedded .sidebar { display: none; }
+body.embedded .main { padding: 20px 24px; }
+
 /* ---------- App layout ---------- */
 .app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
 .sidebar {
@@ -167,6 +172,7 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; justif
   .sidebar { box-shadow: 0 4px 12px rgba(190, 211, 199, 0.4); padding: 16px; }
   .sidebar .brand { margin-bottom: 16px; }
   .main { padding: 20px; }
+  body.embedded .main { padding: 16px; }
 }
 
 /* ---------- Forms and detail page ---------- */

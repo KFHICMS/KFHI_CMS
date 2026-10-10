@@ -28,10 +28,10 @@
             <div class="px-5 pt-8">
                 <p class="px-3 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-400">Workspace</p>
                 <nav class="mt-3 space-y-1.5" aria-label="Main navigation">
-                    <a href="{{ route('dashboard') }}" aria-current="page" class="flex items-center gap-3 rounded-xl bg-emerald-800 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-950/20">
+                    <a href="{{ route('dashboard') }}" @if (request()->routeIs('dashboard')) aria-current="page" @endif class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-emerald-100/80 transition hover:bg-white/10 hover:text-white @if (request()->routeIs('dashboard')) bg-emerald-800 font-semibold text-white shadow-lg shadow-emerald-950/20 @endif">
                         <span aria-hidden="true" class="inline-flex h-4 w-4 items-center justify-center"><i class="fa-solid fa-gauge-high text-xs"></i></span> Dashboard
                     </a>
-                    <a href="{{ asset('admin-ui/login.html') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-emerald-100/80 transition hover:bg-white/10 hover:text-white">
+                    <a href="{{ route('dashboard.users') }}" @if (request()->routeIs('dashboard.users')) aria-current="page" @endif class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-emerald-100/80 transition hover:bg-white/10 hover:text-white @if (request()->routeIs('dashboard.users')) bg-emerald-800 font-semibold text-white shadow-lg shadow-emerald-950/20 @endif">
                         <span aria-hidden="true" class="inline-flex h-4 w-4 items-center justify-center"><i class="fa-solid fa-users text-xs"></i></span> User Management
                     </a>
                     <a href="#" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-emerald-100/80 transition hover:bg-white/10 hover:text-white">
@@ -70,8 +70,8 @@
                         <i id="sidebarToggleIcon" class="fa-solid fa-bars" aria-hidden="true"></i>
                     </button>
                     <div>
-                        <p class="text-xs font-medium text-slate-400">Workspace / Overview</p>
-                        <h1 class="text-lg font-bold tracking-tight text-slate-900">Dashboard</h1>
+                        <p class="text-xs font-medium text-slate-400">Workspace / {{ request()->routeIs('dashboard.users') ? 'User Management' : 'Overview' }}</p>
+                        <h1 class="text-lg font-bold tracking-tight text-slate-900">{{ request()->routeIs('dashboard.users') ? 'User Management' : 'Dashboard' }}</h1>
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
@@ -82,7 +82,10 @@
                 </div>
             </header>
 
-            <div class="mx-auto max-w-7xl space-y-7 px-4 py-7 sm:px-6 lg:px-10 lg:py-9">
+            <div class="{{ request()->routeIs('dashboard.users') ? 'h-[calc(100vh-4rem)] min-h-[640px]' : 'mx-auto max-w-7xl space-y-7 px-4 py-7 sm:px-6 lg:px-10 lg:py-9' }}">
+                @if (request()->routeIs('dashboard.users'))
+                    <iframe src="{{ asset('admin-ui/users.html') }}?embedded=1" title="User Management" class="block h-full w-full border-0"></iframe>
+                @else
                 <section class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-700 px-6 py-7 text-white shadow-xl shadow-emerald-900/10 sm:px-9 sm:py-9">
                     <div class="pointer-events-none absolute -right-10 -top-24 h-72 w-72 rounded-full border-[36px] border-white/5"></div>
                     <div class="pointer-events-none absolute -bottom-32 right-40 h-64 w-64 rounded-full bg-emerald-400/10 blur-2xl"></div>
@@ -236,6 +239,7 @@
                 @if (session('error'))
                     <div role="alert" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800">{{ session('error') }}</div>
                 @endif
+                @endif
             </div>
         </main>
     </div>
@@ -262,6 +266,8 @@
         </div>
     </div>
 
-    <script id="dashboard-chart-data" type="application/json">@json($chartData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)</script>
+    @unless (request()->routeIs('dashboard.users'))
+        <script id="dashboard-chart-data" type="application/json">@json($chartData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)</script>
+    @endunless
 </body>
 </html>
