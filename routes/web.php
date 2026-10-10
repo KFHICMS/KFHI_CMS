@@ -2,9 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('child_officer.childdashboard');
-});
+Route::redirect('/', '/admin-ui/login.html')->name('home');
+Route::view('/child-officer/dashboard', 'child_officer.childdashboard')->name('child-officer.dashboard');
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MessageController;
