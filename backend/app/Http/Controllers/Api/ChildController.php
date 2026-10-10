@@ -6,17 +6,39 @@ use App\Http\Controllers\Controller;
 use App\Models\Child;
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ChildController extends Controller
 {
-    // GET /api/children
+    // GET /api/children?q=&program=&status=active|archived|all&page=&per_page=
     public function index(Request $request)
     {
-        $children = Child::where('status', 'active')->latest()->get();
         $user = $request->user();
 
+        $query = Child::accessibleTo($user)->with('guardians');
+
+        $status = $request->input('status', 'active');
+        if ($status !== 'all') {
+            $query->where('status', $status === 'archived' ? 'archived' : 'active');
+        }
+
+        if ($request->filled('q')) {
+            $term = '%' . addcslashes($request->input('q'), '%_\\') . '%';
+            $query->where(function ($w) use ($term) {
+                $w->where('full_name', 'like', $term)
+                  ->orWhere('child_code', 'like', $term);
+            });
+        }
+
+        if ($request->filled('program')) {
+            $query->where('program', $request->input('program'));
+        }
+
+        $perPage = min(max($request->integer('per_page', 15), 1), 100);
+        $page    = $query->latest('id')->paginate($perPage);
+
         return response()->json(
-            $children->map(fn ($c) => $this->transform($c->load('guardians'), $user))
+            $page->through(fn ($c) => $c->visibleTo($user))
         );
     }
 
@@ -39,43 +61,107 @@ class ChildController extends Controller
 
         $this->log($request, 'CREATE_CHILD', $child->id);
 
-        return response()->json($this->transform($child->load('guardians'), $request->user()), 201);
+        return response()->json($child->load('guardians')->visibleTo($request->user()), 201);
     }
 
     // GET /api/children/{child}
     public function show(Request $request, Child $child)
     {
+        $this->authorizeChild($request, $child);
         $this->log($request, 'VIEW_CHILD', $child->id);
-        return response()->json($this->transform($child->load('guardians'), $request->user()));
+
+        return response()->json($child->load('guardians')->visibleTo($request->user()));
     }
 
     // PUT /api/children/{child}
     public function update(Request $request, Child $child)
     {
+        $this->authorizeChild($request, $child);
+
         $data = $this->validateChild($request);
-        unset($data['guardians']); // guardians handled separately for simplicity
+        $guardians = $data['guardians'] ?? null;
+        unset($data['guardians']);
+
         $child->update($data);
+
+        // If a guardians array is sent, it replaces the existing list.
+        if (is_array($guardians)) {
+            $child->guardians()->delete();
+            foreach ($guardians as $g) {
+                $child->guardians()->create($g);
+            }
+        }
 
         $this->log($request, 'UPDATE_CHILD', $child->id);
 
-        return response()->json($this->transform($child->fresh()->load('guardians'), $request->user()));
+        return response()->json($child->fresh()->load('guardians')->visibleTo($request->user()));
     }
 
     // PATCH /api/children/{child}/archive
     public function archive(Request $request, Child $child)
     {
+        $this->authorizeChild($request, $child);
+
         $child->update(['status' => 'archived']);
+        // An archived child's QR codes stop working immediately.
+        \App\Models\QrToken::where('child_id', $child->id)->update(['is_active' => false]);
+
         $this->log($request, 'ARCHIVE_CHILD', $child->id);
         return response()->json(['message' => 'Child archived']);
     }
 
+    // POST /api/children/{child}/photo   (multipart: photo)
+    public function uploadPhoto(Request $request, Child $child)
+    {
+        $this->authorizeChild($request, $child);
+
+        $request->validate([
+            'photo' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+        ]);
+
+        if ($child->photo_path) {
+            Storage::disk('local')->delete($child->photo_path);
+        }
+
+        // Private disk: photos are NOT web-accessible, only via the endpoint below.
+        $path = $request->file('photo')->store('child-photos', 'local');
+        $child->update(['photo_path' => $path]);
+
+        $this->log($request, 'UPLOAD_CHILD_PHOTO', $child->id);
+
+        return response()->json(['has_photo' => true]);
+    }
+
+    // GET /api/children/{child}/photo
+    public function photo(Request $request, Child $child)
+    {
+        $this->authorizeChild($request, $child);
+
+        abort_unless(
+            $child->photo_path && Storage::disk('local')->exists($child->photo_path),
+            404,
+            'No photo'
+        );
+
+        return Storage::disk('local')->response($child->photo_path);
+    }
+
     // ---- helpers ----
+
+    private function authorizeChild(Request $request, Child $child): void
+    {
+        abort_unless(
+            $child->isAccessibleTo($request->user()),
+            403,
+            'This child is outside your assigned programs.'
+        );
+    }
 
     private function validateChild(Request $request): array
     {
         return $request->validate([
             'full_name'             => ['required', 'string', 'max:255'],
-            'date_of_birth'         => ['nullable', 'date'],
+            'date_of_birth'         => ['nullable', 'date', 'before_or_equal:today'],
             'gender'                => ['nullable', 'string', 'max:20'],
             'address'               => ['nullable', 'string'],
             'school'                => ['nullable', 'string'],
@@ -94,15 +180,6 @@ class ChildController extends Controller
             'guardians.*.address'           => ['nullable', 'string'],
         ]);
     }
-
-    /**
-     * THE KEY SECURITY STEP: return only the fields this user's role may see.
-     */
-   private function transform(Child $child, $user): array
-{
-    return $child->visibleTo($user);
-}
-
 
     private function log(Request $request, string $action, int $childId): void
     {
