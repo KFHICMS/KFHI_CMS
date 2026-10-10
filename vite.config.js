@@ -10,9 +10,11 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/css/admin/dashboard.css',
                 'resources/css/child_officer/childdashboard.css',
+                'resources/css/field_officer/fieldofficerdashboard.css',
                 'resources/js/app.js',
                 'resources/js/admin/dashboard.js',
                 'resources/js/child_officer/childdashboard.js',
+                'resources/js/field_officer/fieldofficerdashboard.js',
             ],
             refresh: true,
             fonts: [

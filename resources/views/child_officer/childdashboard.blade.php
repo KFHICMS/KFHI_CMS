@@ -58,9 +58,38 @@
                         </button>
                         <div id="child-management-menu" class="mt-1 space-y-1 pl-11 hidden">
                             <a href="#" class="block rounded-lg px-3 py-2 text-sm font-medium text-emerald-200/70 transition hover:bg-white/5 hover:text-white">Register Child</a>
-                            <a href="#" class="block rounded-lg px-3 py-2 text-sm font-medium text-emerald-200/70 transition hover:bg-white/5 hover:text-white">Search Child</a>
                             <a href="#" class="block rounded-lg px-3 py-2 text-sm font-medium text-emerald-200/70 transition hover:bg-white/5 hover:text-white">Edit Child</a>
-                            <a href="#" class="block rounded-lg px-3 py-2 text-sm font-medium text-emerald-200/70 transition hover:bg-white/5 hover:text-white">View Child (Profile)</a>
+                            <a href="#" class="block rounded-lg px-3 py-2 text-sm font-medium text-emerald-200/70 transition hover:bg-white/5 hover:text-white">Search Child</a>
+
+                            <div>
+                                <button type="button" onclick="toggleDropdown('view-child-menu')" class="flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm font-medium text-emerald-200/70 transition hover:bg-white/5 hover:text-white">
+                                    <span>View Child (Profile)</span>
+                                    <i id="view-child-menu-icon" class="fa-solid fa-chevron-down text-[10px] transition-transform"></i>
+                                </button>
+                                <div id="view-child-menu" class="mt-1 space-y-1 pl-4 hidden">
+                                    <a href="#" class="block rounded-lg px-3 py-2 text-xs font-medium text-emerald-300/70 transition hover:bg-white/5 hover:text-white">Personal Info</a>
+                                    <a href="#" class="block rounded-lg px-3 py-2 text-xs font-medium text-emerald-300/70 transition hover:bg-white/5 hover:text-white">Education Info</a>
+                                    <a href="#" class="block rounded-lg px-3 py-2 text-xs font-medium text-emerald-300/70 transition hover:bg-white/5 hover:text-white">Guardian Info</a>
+                                    <a href="#" class="block rounded-lg px-3 py-2 text-xs font-medium text-emerald-300/70 transition hover:bg-white/5 hover:text-white">Support Info</a>
+                                    <a href="#" class="block rounded-lg px-3 py-2 text-xs font-medium text-emerald-300/70 transition hover:bg-white/5 hover:text-white">E Documents</a>
+                                    <a href="#" class="block rounded-lg px-3 py-2 text-xs font-medium text-emerald-300/70 transition hover:bg-white/5 hover:text-white">Notes</a>
+                                    <a href="#" class="block rounded-lg px-3 py-2 text-xs font-medium text-emerald-300/70 transition hover:bg-white/5 hover:text-white">Program Participated</a>
+                                    <a href="#" class="block rounded-lg px-3 py-2 text-xs font-medium text-emerald-300/70 transition hover:bg-white/5 hover:text-white">Activities Participated</a>
+                                    <a href="#" class="block rounded-lg px-3 py-2 text-xs font-medium text-emerald-300/70 transition hover:bg-white/5 hover:text-white">Attendance history</a>
+                                    <a href="#" class="block rounded-lg px-3 py-2 text-xs font-medium text-emerald-300/70 transition hover:bg-white/5 hover:text-white">Benefits Received</a>
+                                    <div>
+                                        <button type="button" onclick="toggleDropdown('follow-up-history-menu')" class="flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-xs font-medium text-emerald-300/70 transition hover:bg-white/5 hover:text-white">
+                                            <span>Follow up history</span>
+                                            <i id="follow-up-history-menu-icon" class="fa-solid fa-chevron-down text-[10px] transition-transform"></i>
+                                        </button>
+                                        <div id="follow-up-history-menu" class="mt-1 space-y-1 pl-4 hidden">
+                                            <a href="#" class="block rounded-lg px-3 py-2 text-[11px] font-medium text-emerald-400/70 transition hover:bg-white/5 hover:text-white">Pending</a>
+                                            <a href="#" class="block rounded-lg px-3 py-2 text-[11px] font-medium text-emerald-400/70 transition hover:bg-white/5 hover:text-white">Completed</a>
+                                        </div>
+                                    </div>
+                                    <a href="#" class="block rounded-lg px-3 py-2 text-xs font-medium text-emerald-300/70 transition hover:bg-white/5 hover:text-white">Complete Child timeline</a>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -73,8 +102,8 @@
                             <i id="qr-management-menu-icon" class="fa-solid fa-chevron-down text-[10px] transition-transform"></i>
                         </button>
                         <div id="qr-management-menu" class="mt-1 space-y-1 pl-11 hidden">
-                            <a href="#" class="block rounded-lg px-3 py-2 text-sm font-medium text-emerald-200/70 transition hover:bg-white/5 hover:text-white">Generate QR</a>
-                            <a href="#" class="block rounded-lg px-3 py-2 text-sm font-medium text-emerald-200/70 transition hover:bg-white/5 hover:text-white">Scan QR</a>
+                            <a href="#" onclick="showQRManagement('generate'); return false;" class="block rounded-lg px-3 py-2 text-sm font-medium text-emerald-200/70 transition hover:bg-white/5 hover:text-white">Generate QR</a>
+                            <a href="#" onclick="showQRManagement('scan'); return false;" class="block rounded-lg px-3 py-2 text-sm font-medium text-emerald-200/70 transition hover:bg-white/5 hover:text-white">Scan QR</a>
                         </div>
                     </div>
 
@@ -88,6 +117,7 @@
                         </button>
                         <div id="follow-ups-menu" class="mt-1 space-y-1 pl-11 hidden">
                             <a href="#" class="block rounded-lg px-3 py-2 text-sm font-medium text-emerald-200/70 transition hover:bg-white/5 hover:text-white">Pending</a>
+                            <a href="#" class="block rounded-lg px-3 py-2 text-sm font-medium text-emerald-200/70 transition hover:bg-white/5 hover:text-white">Follow ups</a>
                             <a href="#" class="block rounded-lg px-3 py-2 text-sm font-medium text-emerald-200/70 transition hover:bg-white/5 hover:text-white">Updates</a>
                         </div>
                     </div>
@@ -114,7 +144,7 @@
         </aside>
 
         <main class="min-w-0 flex-1 flex flex-col h-screen overflow-hidden">
-            <header class="shrink-0 sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur sm:px-6 lg:px-10">
+            <header class="shrink-0 sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/40 px-4 backdrop-blur sm:px-12 lg:px-30">
                 <div class="flex items-center gap-3">
                     <button id="sidebarToggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50">
                         <i id="sidebarToggleIcon" class="fa-solid fa-bars" aria-hidden="true"></i>
@@ -133,7 +163,7 @@
             </header>
 
             <div class="flex-1 overflow-y-auto dashboard-scrollbar">
-                <div class="mx-auto max-w-7xl space-y-7 px-4 py-7 sm:px-6 lg:px-10 lg:py-9">
+                <div id="dashboardOverviewSection" class="mx-auto max-w-7xl space-y-7 px-4 py-7 sm:px-6 lg:px-10 lg:py-9">
                     <!-- Welcome Section -->
                     <section class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-700 px-6 py-7 text-white shadow-xl shadow-emerald-900/10 sm:px-9 sm:py-9">
                         <div class="pointer-events-none absolute -right-10 -top-24 h-72 w-72 rounded-full border-[36px] border-white/5"></div>
@@ -148,7 +178,7 @@
                                 <h2 class="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl"><span id="dashboardGreeting">{{ $greeting }}</span>, Officer! <span aria-hidden="true" class="inline-block text-emerald-100"><i class="fa-solid fa-hand-wave"></i></span></h2>
                                 <p class="mt-2 max-w-xl text-sm leading-6 text-emerald-50/80">Manage children profiles, track your follow-ups, and generate quick QR reports from here.</p>
                             </div>
-                            <div class="shrink-0 rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
+                            <div class="shrink-0 rounded-2xl border border-white/15 bg-white/10 px-4 py-3 ">
                                 <p class="text-xs font-medium text-emerald-100/75">Today</p>
                                 <p class="mt-1 text-sm font-bold">{{ now()->format('l, M j, Y') }}</p>
                             </div>
@@ -160,19 +190,19 @@
                         <article class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                             <div class="flex items-start justify-between">
                                 <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-xl text-emerald-700"><i class="fa-solid fa-child"></i></span>
-                                <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">Assigned</span>
+                                <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">Children</span>
                             </div>
-                            <p class="mt-5 text-3xl font-extrabold tracking-tight text-slate-900">{{ number_format($stats['assigned_children'] ?? 42) }}</p>
-                            <p class="mt-1 text-sm text-slate-500">Children under your care</p>
+                            <p class="mt-5 text-3xl font-extrabold tracking-tight text-slate-900">{{ number_format($stats['active_children']) }}</p>
+                            <p class="mt-1 text-sm text-slate-500">Active child records</p>
                         </article>
 
                         <article class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                             <div class="flex items-start justify-between">
                                 <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-xl text-amber-700"><i class="fa-solid fa-clipboard-list"></i></span>
-                                <span class="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">Pending</span>
+                                <span class="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">QR codes</span>
                             </div>
-                            <p class="mt-5 text-3xl font-extrabold tracking-tight text-slate-900">{{ number_format($stats['pending_followups'] ?? 8) }}</p>
-                            <p class="mt-1 text-sm text-slate-500">Follow-ups this week</p>
+                            <p class="mt-5 text-3xl font-extrabold tracking-tight text-slate-900">{{ number_format($stats['active_qr_codes']) }}</p>
+                            <p class="mt-1 text-sm text-slate-500">Active QR codes</p>
                         </article>
 
                         <article class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
@@ -180,17 +210,17 @@
                                 <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-50 text-xl text-sky-700"><i class="fa-solid fa-qrcode"></i></span>
                                 <span class="rounded-full bg-sky-50 px-2.5 py-1 text-[11px] font-semibold text-sky-700">Scanned</span>
                             </div>
-                            <p class="mt-5 text-3xl font-extrabold tracking-tight text-slate-900">{{ number_format($stats['qr_scanned'] ?? 156) }}</p>
-                            <p class="mt-1 text-sm text-slate-500">QRs scanned this month</p>
+                            <p class="mt-5 text-3xl font-extrabold tracking-tight text-slate-900">{{ number_format($stats['qr_scans']) }}</p>
+                            <p class="mt-1 text-sm text-slate-500">QR scans this month</p>
                         </article>
 
                         <article class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                             <div class="flex items-start justify-between">
                                 <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-50 text-xl text-violet-700"><i class="fa-solid fa-file-contract"></i></span>
-                                <span class="rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-semibold text-violet-700">Reports</span>
+                                <span class="rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-semibold text-violet-700">Records</span>
                             </div>
-                            <p class="mt-5 text-3xl font-extrabold tracking-tight text-slate-900">{{ number_format($stats['reports_submitted'] ?? 12) }}</p>
-                            <p class="mt-1 text-sm text-slate-500">Reports submitted</p>
+                            <p class="mt-5 text-3xl font-extrabold tracking-tight text-slate-900">{{ number_format($stats['updated_children']) }}</p>
+                            <p class="mt-1 text-sm text-slate-500">Child records updated this month</p>
                         </article>
                     </section>
 
@@ -202,15 +232,15 @@
                                 <p class="mt-1 text-sm text-slate-500">Quickly access essential tools from your workflow</p>
                             </div>
                             <div class="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                <a href="#" class="group flex items-center gap-4 rounded-xl border border-slate-200 p-4 transition hover:border-emerald-300 hover:bg-emerald-50/60">
+                                <a href="#" onclick="showManageChildren(); openChildModal(); return false;" class="group flex items-center gap-4 rounded-xl border border-slate-200 p-4 transition hover:border-emerald-300 hover:bg-emerald-50/60">
                                     <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-xl text-emerald-700 transition group-hover:bg-emerald-200"><i class="fa-solid fa-user-plus"></i></span>
                                     <span><span class="block text-sm font-semibold text-slate-800">Register Child</span><span class="mt-1 block text-xs text-slate-500">Add a new child to the system</span></span>
                                 </a>
-                                <a href="#" class="group flex items-center gap-4 rounded-xl border border-slate-200 p-4 transition hover:border-amber-300 hover:bg-amber-50/60">
+                                <a href="#" onclick="showManageChildren(); return false;" class="group flex items-center gap-4 rounded-xl border border-slate-200 p-4 transition hover:border-amber-300 hover:bg-amber-50/60">
                                     <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-xl text-amber-700 transition group-hover:bg-amber-200"><i class="fa-solid fa-magnifying-glass"></i></span>
                                     <span><span class="block text-sm font-semibold text-slate-800">Search Child</span><span class="mt-1 block text-xs text-slate-500">Find profiles and update records</span></span>
                                 </a>
-                                <a href="#" class="group flex items-center gap-4 rounded-xl border border-slate-200 p-4 transition hover:border-sky-300 hover:bg-sky-50/60">
+                                <a href="#" onclick="showQRManagement('scan'); return false;" class="group flex items-center gap-4 rounded-xl border border-slate-200 p-4 transition hover:border-sky-300 hover:bg-sky-50/60">
                                     <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-xl text-sky-700 transition group-hover:bg-sky-200"><i class="fa-solid fa-qrcode"></i></span>
                                     <span><span class="block text-sm font-semibold text-slate-800">Scan QR Code</span><span class="mt-1 block text-xs text-slate-500">Track attendance and participation</span></span>
                                 </a>
@@ -225,44 +255,21 @@
                         <article class="flex min-h-[390px] flex-col rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
                             <div class="flex items-start justify-between">
                                 <div>
-                                    <h3 class="font-bold text-slate-900">Upcoming Follow-ups</h3>
-                                    <p class="mt-1 text-sm text-slate-500">Tasks requiring your attention</p>
+                                    <h3 class="font-bold text-slate-900">Recently registered children</h3>
+                                    <p class="mt-1 text-sm text-slate-500">Latest child records in the database</p>
                                 </div>
-                                <span class="rounded-lg bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">3 Pending</span>
+                                <span class="rounded-lg bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">{{ $recentChildren->count() }} Records</span>
                             </div>
 
                             <div class="dashboard-scrollbar mt-5 flex-1 space-y-3 overflow-y-auto pr-1">
-                                <!-- Dummy Data for visual -->
-                                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-4">
-                                    <div class="flex items-start justify-between">
-                                        <div class="min-w-0">
-                                            <h4 class="truncate text-sm font-semibold text-slate-800">Umar Faizer</h4>
-                                            <p class="mt-0.5 text-xs text-slate-500">Health Checkup</p>
-                                        </div>
-                                        <span class="rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-600">Today</span>
+                                @forelse ($recentChildren as $child)
+                                    <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-4">
+                                        <h4 class="text-sm font-semibold text-slate-800">Child record added</h4>
+                                        <time class="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">{{ $child->created_at?->diffForHumans() }}</time>
                                     </div>
-                                    <a href="#" class="mt-3 inline-block rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100">View Profile</a>
-                                </div>
-                                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-4">
-                                    <div class="flex items-start justify-between">
-                                        <div class="min-w-0">
-                                            <h4 class="truncate text-sm font-semibold text-slate-800">Shahid Bhai</h4>
-                                            <p class="mt-0.5 text-xs text-slate-500">Education Support Delivery</p>
-                                        </div>
-                                        <span class="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-600">Tomorrow</span>
-                                    </div>
-                                    <a href="#" class="mt-3 inline-block rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100">View Profile</a>
-                                </div>
-                                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-4">
-                                    <div class="flex items-start justify-between">
-                                        <div class="min-w-0">
-                                            <h4 class="truncate text-sm font-semibold text-slate-800">pugalu</h4>
-                                            <p class="mt-0.5 text-xs text-slate-500">Guardian Meeting</p>
-                                        </div>
-                                        <span class="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-600">In 3 days</span>
-                                    </div>
-                                    <a href="#" class="mt-3 inline-block rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100">View Profile</a>
-                                </div>
+                                @empty
+                                    <p class="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-500">No child records have been added yet.</p>
+                                @endforelse
                             </div>
                         </article>
                     </section>
@@ -274,6 +281,9 @@
                         <div role="alert" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800">{{ session('error') }}</div>
                     @endif
                 </div>
+
+                @include('child_officer.manage_children_snippet')
+                @include('child_officer.qr_management_snippet')
             </div>
         </main>
     </div>

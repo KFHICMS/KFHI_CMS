@@ -64,7 +64,7 @@
         </aside>
 
         <main class="min-w-0 flex-1">
-            <header class="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur sm:px-6 lg:px-10">
+            <header class="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/80 px-4 backdrop-blur sm:px-12 lg:px-30">
                 <div class="flex items-center gap-3">
                     <button id="sidebarToggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50">
                         <i id="sidebarToggleIcon" class="fa-solid fa-bars" aria-hidden="true"></i>
