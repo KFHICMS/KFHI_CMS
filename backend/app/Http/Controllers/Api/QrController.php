@@ -74,7 +74,11 @@ class QrController extends Controller
             return response()->json(['message' => 'QR code is invalid or revoked'], 404);
         }
 
-        $child = $qr->child->load('guardians');
+        $child = $qr->child?->load('guardians');
+        if (! $child) {
+            $this->logFail($request, 'QR token without a child record');
+            return response()->json(['message' => 'QR code is invalid or revoked'], 404);
+        }
 
         // ← NEW: archived children's cards no longer resolve
         if ($child->status !== 'active') {

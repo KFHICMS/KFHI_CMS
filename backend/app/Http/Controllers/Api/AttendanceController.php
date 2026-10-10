@@ -33,9 +33,9 @@ class AttendanceController extends Controller
         if (! $qr) {
             return response()->json(['message' => 'QR code is invalid or revoked'], 404);
         }
-        $child = $qr->child;
-                if ($child->status !== 'active') {
-            return response()->json(['message' => 'This child record is archived.'], 410);
+               $child = $qr->child;
+        if (! $child) {
+            return response()->json(['message' => 'QR code is invalid or revoked'], 404);
         }
         if (! $child->isAccessibleTo($request->user())) {
             return response()->json(['message' => 'This child is outside your assigned programs.'], 403);
@@ -60,32 +60,36 @@ class AttendanceController extends Controller
         return response()->json([
             'child_code'     => $child->child_code,
             'child_name'     => $child->full_name,
-            'status'         => 'present',
+            'status'         => $attendance->status,
             'already_marked' => $alreadyMarked,
-            'message'        => $alreadyMarked ? 'Already marked present' : 'Attendance marked ✓',
+            'message'        => $alreadyMarked
+                ? 'Already recorded as ' . $attendance->status
+                : 'Attendance marked ✓',
         ]);
     }
 
     // GET /api/events/{event}/attendance   (view the list)
-public function index(Request $request, Event $event)
-{
-    $user = $request->user();
+    // GET /api/events/{event}/attendance   (view the list)
+    public function index(Request $request, Event $event)
+    {
+        $user = $request->user();
 
-    $list = $event->attendances()
-        ->whereHas('child', fn ($q) => $q->accessibleTo($user))
-        ->with('child:id,child_code,full_name')
-        ->latest()->get()
-        ->map(fn ($a) => [
-            'child_code' => $a->child->child_code,
-            'child_name' => $a->child->full_name,
-            'status'     => $a->status,
-            'marked_at'  => $a->created_at,
+        $records = $event->attendances()
+            ->whereHas('child', fn ($q) => $q->accessibleTo($user))
+            ->with('child:id,child_code,full_name')
+            ->latest()->get()
+            ->map(fn ($a) => [
+                'child_code' => $a->child->child_code,
+                'child_name' => $a->child->full_name,
+                'status'     => $a->status,
+                'marked_at'  => $a->created_at,
+            ]);
+
+        return response()->json([
+            'event'   => $event->name,
+            'present' => $records->where('status', 'present')->count(),
+            'total'   => $records->count(),
+            'records' => $records,
         ]);
-
-    return response()->json([
-        'event'   => $event->name,
-        'present' => $list->count(),
-        'records' => $list,
-    ]);
-}
+    }
 }
