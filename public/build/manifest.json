@@ -29,15 +29,17 @@
   },
   "resources/css/admin/dashboard.css": {
     "file": "assets/dashboard-1mvgy4PH.css",
-    "name": "dashboard",
+    "name": "fieldofficerdashboard",
     "names": [
-      "dashboard.css"
+      "dashboard.css",
+      "childdashboard.css",
+      "fieldofficerdashboard.css"
     ],
     "src": "resources/css/admin/dashboard.css",
     "isEntry": true
   },
   "resources/css/app.css": {
-    "file": "assets/app-Cqt77M3q.css",
+    "file": "assets/app-BIGD5GKv.css",
     "name": "app",
     "names": [
       "app.css"
@@ -45,8 +47,30 @@
     "src": "resources/css/app.css",
     "isEntry": true
   },
+  "resources/css/child_officer/childdashboard.css": {
+    "file": "assets/dashboard-1mvgy4PH.css",
+    "name": "fieldofficerdashboard",
+    "names": [
+      "dashboard.css",
+      "childdashboard.css",
+      "fieldofficerdashboard.css"
+    ],
+    "src": "resources/css/admin/dashboard.css",
+    "isEntry": true
+  },
+  "resources/css/field_officer/fieldofficerdashboard.css": {
+    "file": "assets/dashboard-1mvgy4PH.css",
+    "name": "fieldofficerdashboard",
+    "names": [
+      "dashboard.css",
+      "childdashboard.css",
+      "fieldofficerdashboard.css"
+    ],
+    "src": "resources/css/admin/dashboard.css",
+    "isEntry": true
+  },
   "resources/js/admin/dashboard.js": {
-    "file": "assets/dashboard-B20JeyUd.js",
+    "file": "assets/dashboard-C861FGSq.js",
     "name": "dashboard",
     "src": "resources/js/admin/dashboard.js",
     "isEntry": true
@@ -55,6 +79,18 @@
     "file": "assets/app-BvRk9kiK.js",
     "name": "app",
     "src": "resources/js/app.js",
+    "isEntry": true
+  },
+  "resources/js/child_officer/childdashboard.js": {
+    "file": "assets/childdashboard-CsEru-vt.js",
+    "name": "childdashboard",
+    "src": "resources/js/child_officer/childdashboard.js",
+    "isEntry": true
+  },
+  "resources/js/field_officer/fieldofficerdashboard.js": {
+    "file": "assets/fieldofficerdashboard-CsEru-vt.js",
+    "name": "fieldofficerdashboard",
+    "src": "resources/js/field_officer/fieldofficerdashboard.js",
     "isEntry": true
   }
 }
