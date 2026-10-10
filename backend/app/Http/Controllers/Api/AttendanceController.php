@@ -17,6 +17,9 @@ class AttendanceController extends Controller
     public function scan(Request $request, Event $event)
     {
         $request->validate(['token' => ['required', 'string']]);
+                if ($event->status !== 'active' || ! $event->qr_attendance_enabled) {
+            return response()->json(['message' => 'Attendance is closed for this event.'], 422);
+        }
 
         // 1. Decrypt the QR token
         try {
@@ -30,7 +33,13 @@ class AttendanceController extends Controller
         if (! $qr) {
             return response()->json(['message' => 'QR code is invalid or revoked'], 404);
         }
-        $child = $qr->child;
+               $child = $qr->child;
+        if (! $child) {
+            return response()->json(['message' => 'QR code is invalid or revoked'], 404);
+        }
+        if (! $child->isAccessibleTo($request->user())) {
+            return response()->json(['message' => 'This child is outside your assigned programs.'], 403);
+        }
 
         // 3. Mark attendance — firstOrCreate prevents duplicates
         $attendance = Attendance::firstOrCreate(
@@ -51,16 +60,24 @@ class AttendanceController extends Controller
         return response()->json([
             'child_code'     => $child->child_code,
             'child_name'     => $child->full_name,
-            'status'         => 'present',
+            'status'         => $attendance->status,
             'already_marked' => $alreadyMarked,
-            'message'        => $alreadyMarked ? 'Already marked present' : 'Attendance marked ✓',
+            'message'        => $alreadyMarked
+                ? 'Already recorded as ' . $attendance->status
+                : 'Attendance marked ✓',
         ]);
     }
 
     // GET /api/events/{event}/attendance   (view the list)
-    public function index(Event $event)
+    // GET /api/events/{event}/attendance   (view the list)
+    public function index(Request $request, Event $event)
     {
-        $list = $event->attendances()->with('child:id,child_code,full_name')->latest()->get()
+        $user = $request->user();
+
+        $records = $event->attendances()
+            ->whereHas('child', fn ($q) => $q->accessibleTo($user))
+            ->with('child:id,child_code,full_name')
+            ->latest()->get()
             ->map(fn ($a) => [
                 'child_code' => $a->child->child_code,
                 'child_name' => $a->child->full_name,
@@ -70,58 +87,9 @@ class AttendanceController extends Controller
 
         return response()->json([
             'event'   => $event->name,
-            'present' => $list->count(),
-            'records' => $list,
+            'present' => $records->where('status', 'present')->count(),
+            'total'   => $records->count(),
+            'records' => $records,
         ]);
     }
-
-     // GET /api/events/{event}/attendance/export  → downloads a CSV
-    public function export(Request $request, Event $event)
-    {
-        $filename = 'attendance_' . preg_replace('/[^A-Za-z0-9]+/', '_', $event->name)
-                . '_' . date('Ymd_His') . '.csv';
-
-        // One row per child (the unique event_id+child_id constraint prevents duplicates)
-        $records = $event->attendances()
-            ->with('child:id,child_code,full_name')
-            ->orderBy('created_at')
-            ->get();
-
-        // Audit the export
-        AuditLog::create([
-            'user_id'     => $request->user()->id,
-            'action'      => 'EXPORT_ATTENDANCE',
-            'entity_type' => 'Event',
-            'entity_id'   => $event->id,
-            'ip_address'  => $request->ip(),
-        ]);
-
-        $headers = [
-            'Content-Type'        => 'text/csv',
-            'Content-Disposition' => "attachment; filename=\"$filename\"",
-        ];
-
-        $callback = function () use ($records, $event) {
-            $out = fopen('php://output', 'w');
-
-            // Column headers
-            fputcsv($out, ['Child Code', 'Child Name', 'Status', 'Marked At', 'Event']);
-
-            // Data rows (clean, no redundancy)
-            foreach ($records as $a) {
-                fputcsv($out, [
-                    $a->child->child_code ?? '',
-                    $a->child->full_name  ?? '',
-                    $a->status,
-                    optional($a->created_at)->format('Y-m-d H:i'),
-                    $event->name,
-                ]);
-            }
-
-            fclose($out);
-        };
-
-        return response()->stream($callback, 200, $headers);
-    }
-
 }

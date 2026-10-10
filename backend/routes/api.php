@@ -61,7 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
     ->middleware('permission:record_attendance');
 
   Route::get('/events/{event}/attendance', [AttendanceController::class, 'index']);
-  
+
   //view_reports lets admin and child_officer export
   Route::get('/events/{event}/attendance/export', [AttendanceController::class, 'export'])
     ->middleware('permission:view_reports');
@@ -79,9 +79,6 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get   ('/children/{child}/follow-ups',      [FollowUpController::class, 'childHistory']);
   Route::patch ('/follow-ups/{followUp}/complete',   [FollowUpController::class, 'complete'])->middleware('permission:manage_followups');
   Route::put   ('/follow-ups/{followUp}',            [FollowUpController::class, 'update'])->middleware('permission:manage_followups');
-
-
-
 
   // Audit log — admin only
   Route::get('/audit-logs', [AuditLogController::class, 'index'])->middleware('permission:view_audit_logs');

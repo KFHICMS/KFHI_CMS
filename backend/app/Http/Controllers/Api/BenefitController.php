@@ -39,6 +39,10 @@ class BenefitController extends Controller
             'quantity'        => ['nullable', 'integer', 'min:1'],
             'notes'           => ['nullable', 'string'],
         ]);
+
+        $child = Child::findOrFail($data['child_id']);
+        abort_unless($child->isAccessibleTo($request->user()), 403, 'This child is outside your assigned programs.');
+        abort_if($child->status !== 'active', 422, 'This child record is archived.');
         $data['quantity'] = $data['quantity'] ?? 1;
         $data['given_by'] = $request->user()->id;
 
@@ -52,8 +56,10 @@ class BenefitController extends Controller
     }
 
     // GET /api/children/{child}/benefits  (a child's benefit history)
-    public function childHistory(Child $child)
+       public function childHistory(Request $request, Child $child)
     {
+        abort_unless($child->isAccessibleTo($request->user()), 403, 'This child is outside your assigned programs.');
+
         return response()->json(
             $child->benefits()->with('type')->latest('given_at')->get()
         );

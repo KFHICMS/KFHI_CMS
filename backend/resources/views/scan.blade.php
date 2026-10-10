@@ -106,7 +106,7 @@ function renderChild(c) {
     document.getElementById('childBox').style.display = 'block';
     msg('');
     let html = '';
-    const show = (k, v) => v ? `<div class="row"><span class="k">${k}</span><span class="v">${v}</span></div>` : '';
+    const show = (k, v) => v ? `<div class="row"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>` : '';
     html += show('Child code', c.child_code);
     html += show('Name', c.full_name);
     html += show('Date of birth', c.date_of_birth ? c.date_of_birth.substring(0,10) : '');
@@ -115,11 +115,12 @@ function renderChild(c) {
     html += show('Medical info', c.medical_info);          // only shown if role permits
     html += show('Emergency contacts', c.emergency_contacts); // only shown if role permits
     if (c.guardians && c.guardians.length) {
-        html += `<div class="row"><span class="k">Guardian</span><span class="v">${c.guardians[0].name} (${c.guardians[0].relationship||''})</span></div>`;
+               html += `<div class="row"><span class="k">Guardian</span><span class="v">${esc(c.guardians[0].name)} (${esc(c.guardians[0].relationship||'')})</span></div>`;
     }
     document.getElementById('childData').innerHTML = html;
 }
 
+const esc = s => String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 function msg(t) { document.getElementById('msg').textContent = t; }
 function logout() { localStorage.removeItem(KEY); location.reload(); }
 

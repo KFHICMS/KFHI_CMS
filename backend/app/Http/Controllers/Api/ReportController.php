@@ -11,6 +11,7 @@ use App\Models\Benefit;
 use App\Models\BenefitType;
 use App\Models\FollowUp;
 use Illuminate\Http\Request;
+use App\Models\Program;
 
 class ReportController extends Controller
 {
@@ -19,7 +20,8 @@ class ReportController extends Controller
     {
         return response()->json([
             'total_children'     => Child::count(),
-            'active_programs'    => Event::where('status', 'active')->count(),
+            'active_programs'    => Program::where('status', 'active')->count(),
+            'active_events'      => Event::where('status', 'active')->count(),
             'total_users'        => User::count(),
             'total_attendance'   => Attendance::count(),
             'total_benefits'     => Benefit::count(),

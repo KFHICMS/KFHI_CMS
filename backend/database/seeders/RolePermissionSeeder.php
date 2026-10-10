@@ -83,7 +83,7 @@ class RolePermissionSeeder extends Seeder
         // 3. Default admin user for testing (DEV ONLY — change before production)
         $adminUser = User::firstOrCreate(
             ['email' => 'admin@kfhi.test'],
-            ['name' => 'KFHI Admin', 'password' => Hash::make('Admin@12345')]
+            ['name' => 'KFHI Admin', 'password' => Hash::make(env('SEED_ADMIN_PASSWORD', 'Admin@12345'))]
         );
         $adminUser->assignRole('admin');
     }
