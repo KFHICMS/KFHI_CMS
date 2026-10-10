@@ -12,6 +12,17 @@ function adminPageUrl(page, query = {}) {
   return url.pathname + url.search + url.hash;
 }
 
+function redirectToLogin(query = {}) {
+  const loginUrl = new URL('/admin-ui/login.html', location.origin);
+  for (const [key, value] of Object.entries(query)) loginUrl.searchParams.set(key, value);
+
+  if (IS_EMBEDDED) {
+    window.top.location.replace(loginUrl.href);
+  } else {
+    location.replace(loginUrl.href);
+  }
+}
+
 if (IS_EMBEDDED) {
   document.addEventListener('click', (event) => {
     const link = event.target.closest('a[href]');
@@ -64,12 +75,12 @@ async function api(path, { method = 'GET', body, form } = {}) {
   // Token expired or invalid -> back to login.
   if (res.status === 401 && token) {
     clearToken();
-    location.href = adminPageUrl('login.html', { expired: '1' });
+    redirectToLogin({ expired: '1' });
     throw new ApiError('Session expired.', 401);
   }
   // Temporary password still active -> go to the change-password screen.
   if (res.status === 403 && data && data.code === 'password_change_required') {
-    location.href = adminPageUrl('login.html', { change: '1' });
+    redirectToLogin({ change: '1' });
     throw new ApiError(data.message, 403);
   }
   if (!res.ok) {
@@ -92,12 +103,12 @@ async function endSession() {
 
 async function logout() {
   await endSession();
-  location.href = adminPageUrl('login.html');
+  redirectToLogin();
 }
 
 // Every admin page calls this first. Returns the logged-in user, or sends to login.
 async function requireAdmin() {
-  if (!getToken()) { location.href = adminPageUrl('login.html'); return null; }
+  if (!getToken()) { redirectToLogin(); return null; }
   const me = await api('/me');
   if (!me.permissions.includes('manage_users')) {
     await logout();

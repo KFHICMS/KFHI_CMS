@@ -78,13 +78,24 @@
                     <span class="hidden rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 sm:inline-flex sm:items-center sm:gap-2">
                         <span class="h-2 w-2 rounded-full bg-emerald-500"></span> System overview
                     </span>
+                    <button id="dashboardAuthButton" type="button" aria-label="Log out" class="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
+                        <i id="dashboardAuthIcon" class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+                        <span id="dashboardAuthLabel">Log out</span>
+                    </button>
                     <span class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-800">A</span>
                 </div>
             </header>
 
             <div class="{{ request()->routeIs('dashboard.users') ? 'h-[calc(100vh-4rem)] min-h-[640px]' : 'mx-auto max-w-7xl space-y-7 px-4 py-7 sm:px-6 lg:px-10 lg:py-9' }}">
                 @if (request()->routeIs('dashboard.users'))
-                    <iframe src="{{ asset('admin-ui/users.html') }}?embedded=1" title="User Management" class="block h-full w-full border-0"></iframe>
+                    <iframe id="userManagementFrame" data-users-src="{{ asset('admin-ui/users.html') }}?embedded=1" title="User Management" class="block h-full w-full border-0"></iframe>
+                    <script>
+                        if (!sessionStorage.getItem('kfhi_token')) {
+                            window.location.replace(@json(asset('admin-ui/login.html')));
+                        } else {
+                            document.getElementById('userManagementFrame').src = document.getElementById('userManagementFrame').dataset.usersSrc;
+                        }
+                    </script>
                 @else
                 <section class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-700 px-6 py-7 text-white shadow-xl shadow-emerald-900/10 sm:px-9 sm:py-9">
                     <div class="pointer-events-none absolute -right-10 -top-24 h-72 w-72 rounded-full border-[36px] border-white/5"></div>

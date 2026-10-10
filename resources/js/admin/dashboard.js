@@ -1,3 +1,9 @@
+const dashboardTokenKey = 'kfhi_token';
+
+if (!sessionStorage.getItem(dashboardTokenKey)) {
+    window.location.replace('/admin-ui/login.html');
+}
+
 const dashboardGreeting = document.getElementById('dashboardGreeting');
 
 function updateDashboardGreeting() {
@@ -36,6 +42,41 @@ sidebarToggle.addEventListener('click', () => {
 });
 sidebarBackdrop.addEventListener('click', () => setSidebarOpen(false));
 desktopViewport.addEventListener('change', (event) => setSidebarOpen(event.matches));
+
+const dashboardAuthButton = document.getElementById('dashboardAuthButton');
+const dashboardAuthLabel = document.getElementById('dashboardAuthLabel');
+const dashboardAuthIcon = document.getElementById('dashboardAuthIcon');
+
+function updateDashboardAuthButton() {
+    const isAuthenticated = Boolean(sessionStorage.getItem(dashboardTokenKey));
+    dashboardAuthLabel.textContent = isAuthenticated ? 'Log out' : 'Sign in';
+    dashboardAuthButton.setAttribute('aria-label', isAuthenticated ? 'Log out' : 'Sign in');
+    dashboardAuthIcon.classList.toggle('fa-arrow-right-from-bracket', isAuthenticated);
+    dashboardAuthIcon.classList.toggle('fa-arrow-right-to-bracket', !isAuthenticated);
+}
+
+updateDashboardAuthButton();
+window.addEventListener('storage', updateDashboardAuthButton);
+
+dashboardAuthButton.addEventListener('click', async () => {
+    const token = sessionStorage.getItem(dashboardTokenKey);
+
+    if (token) {
+        dashboardAuthButton.disabled = true;
+
+        try {
+            await fetch('/api/logout', {
+                method: 'POST',
+                headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
+            });
+        } catch {
+        }
+
+        sessionStorage.removeItem(dashboardTokenKey);
+    }
+
+    window.location.replace('/admin-ui/login.html');
+});
 
 const replyModal = document.getElementById('replyModal');
 
