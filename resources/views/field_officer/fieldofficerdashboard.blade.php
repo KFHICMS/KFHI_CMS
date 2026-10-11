@@ -102,7 +102,6 @@
                 </div>
             </header>
             <div class="flex-1 overflow-y-auto dashboard-scrollbar">
-            <div class="flex-1 overflow-y-auto dashboard-scrollbar">
                 <div class="mx-auto max-w-7xl space-y-7 px-4 py-7 sm:px-6 lg:px-10 lg:py-9">
                     <!-- Welcome Section -->
                     <section class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-700 px-6 py-7 text-white shadow-xl shadow-emerald-900/10 sm:px-9 sm:py-9">

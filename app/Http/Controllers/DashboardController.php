@@ -32,7 +32,7 @@ class DashboardController extends Controller
 
         $programCounts = Child::query()
             ->selectRaw("COALESCE(NULLIF(program, ''), 'Unassigned') AS program_name, COUNT(*) AS total")
-            ->groupBy('program_name')
+            ->groupByRaw("COALESCE(NULLIF(program, ''), 'Unassigned')")
             ->orderBy('program_name')
             ->get();
 
@@ -48,7 +48,7 @@ class DashboardController extends Controller
             ->where('created_at', '>=', $yearStart)
             ->where('created_at', '<', $yearStart->copy()->addYear())
             ->selectRaw("{$monthExpression} AS month, COUNT(*) AS total")
-            ->groupBy('month')
+            ->groupByRaw($monthExpression)
             ->pluck('total', 'month');
 
         $chartData = [

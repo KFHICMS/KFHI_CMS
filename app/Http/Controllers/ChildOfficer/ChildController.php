@@ -153,6 +153,7 @@ class ChildController extends Controller
 
     public function show(Child $child): View
     {
+        // Generate QR code using external API since extension gd is missing
         $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data='.urlencode($child->child_code);
 
         return view('child_officer.children.show', compact('child', 'qrCodeUrl'));

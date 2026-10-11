@@ -60,7 +60,6 @@
                             <a href="#" class="block rounded-lg px-3 py-2 text-sm font-medium text-emerald-200/70 transition hover:bg-white/5 hover:text-white">Register Child</a>
                             <a href="#" class="block rounded-lg px-3 py-2 text-sm font-medium text-emerald-200/70 transition hover:bg-white/5 hover:text-white">Edit Child</a>
                             <a href="#" class="block rounded-lg px-3 py-2 text-sm font-medium text-emerald-200/70 transition hover:bg-white/5 hover:text-white">Search Child</a>
-                            
                             <div>
                                 <button type="button" onclick="toggleDropdown('view-child-menu')" class="flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm font-medium text-emerald-200/70 transition hover:bg-white/5 hover:text-white">
                                     <span>View Child (Profile)</span>
@@ -281,7 +280,6 @@
                         <div role="alert" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800">{{ session('error') }}</div>
                     @endif
                 </div>
-                
                 @include('child_officer.manage_children_snippet')
                 @include('child_officer.qr_management_snippet')
             </div>
