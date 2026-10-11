@@ -18,7 +18,7 @@ use App\Http\Controllers\Api\FollowUpController;
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
 
 // Protected (requires a valid token)
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'active'])->group(function () {
     // Auth
     Route::get ('/me',     [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);

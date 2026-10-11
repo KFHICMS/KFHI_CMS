@@ -17,7 +17,8 @@ class AttendanceController extends Controller
     public function scan(Request $request, Event $event)
     {
         $request->validate(['token' => ['required', 'string']]);
-                if ($event->status !== 'active' || ! $event->qr_attendance_enabled) {
+
+        if ($event->status !== 'active' || ! $event->qr_attendance_enabled) {
             return response()->json(['message' => 'Attendance is closed for this event.'], 422);
         }
 
@@ -33,9 +34,13 @@ class AttendanceController extends Controller
         if (! $qr) {
             return response()->json(['message' => 'QR code is invalid or revoked'], 404);
         }
-               $child = $qr->child;
+
+        $child = $qr->child;
         if (! $child) {
             return response()->json(['message' => 'QR code is invalid or revoked'], 404);
+        }
+        if ($child->status !== 'active') {
+            return response()->json(['message' => 'This child record is archived.'], 410);
         }
         if (! $child->isAccessibleTo($request->user())) {
             return response()->json(['message' => 'This child is outside your assigned programs.'], 403);
@@ -68,7 +73,6 @@ class AttendanceController extends Controller
         ]);
     }
 
-    // GET /api/events/{event}/attendance   (view the list)
     // GET /api/events/{event}/attendance   (view the list)
     public function index(Request $request, Event $event)
     {

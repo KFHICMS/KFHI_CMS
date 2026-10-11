@@ -1,0 +1,119 @@
+/* KFHI CMS – application theme (matches the public home page) */
+:root {
+  --bg: #e6f3eb;
+  --card: #e9f5ee;
+  --green-900: #0b3d26;
+  --green-800: #0a5a33;
+  --green-700: #0d6b3b;
+  --text: #0f3d26;
+  --muted: #4f6f5f;
+  --shadow-dark: rgba(20, 90, 55, .16);
+  --shadow-light: rgba(255, 255, 255, .9);
+
+  /* re-colour Bootstrap */
+  --bs-primary: #0a5a33;
+  --bs-primary-rgb: 10, 90, 51;
+  --bs-link-color: #0a5a33;
+  --bs-link-hover-color: #084a2a;
+  --bs-body-bg: #e6f3eb;
+  --bs-body-color: #0f3d26;
+  --bs-secondary-color: #4f6f5f;
+  --bs-body-font-family: 'Inter', system-ui, sans-serif;
+}
+body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; }
+.text-muted { color: var(--muted) !important; }
+
+/* ---------- navbar (floating, rounded) ---------- */
+#app > .kfhi-nav {
+  --bs-navbar-color: #fff; --bs-navbar-hover-color: #fff; --bs-navbar-active-color: #fff;
+  background: linear-gradient(135deg, #0a5a33, #064427);
+  border-radius: 22px;
+  padding: 14px 26px;
+  width: calc(100% - 24px); max-width: 1240px; margin: 18px auto 0;
+  box-shadow: 0 14px 30px rgba(6, 68, 39, .35);
+  position: sticky; top: 12px; z-index: 20;
+}
+.kfhi-nav .brand-logo { height: 36px; display: block; }
+.kfhi-nav .brand-text, .login-brand .brand-text { color: #fff; font-weight: 800; letter-spacing: .5px; font-size: 1.3rem; }
+.kfhi-nav .nav-link { color: #fff; font-weight: 600; opacity: .9; padding: 8px 14px; border-radius: 12px; display: flex; align-items: center; gap: 8px; }
+.kfhi-nav .nav-link:hover { opacity: 1; background: rgba(255, 255, 255, .1); }
+.kfhi-nav .nav-link.active { opacity: 1; background: rgba(255, 255, 255, .18); }
+.kfhi-nav .user-chip { color: #fff; font-size: .9rem; opacity: .9; margin: 8px 14px 0 0; display: inline-block; }
+.btn-logout {
+  background: #fff; color: var(--green-800); font-weight: 700; font-size: .92rem; border: 0;
+  padding: 10px 18px; border-radius: 14px; box-shadow: 0 6px 14px rgba(0, 0, 0, .18); margin-top: 8px;
+}
+.btn-logout:hover { transform: translateY(-1px); }
+@media (min-width: 768px) { .kfhi-nav .user-chip, .btn-logout { margin-top: 0; } }
+
+#app > #view { max-width: 1240px; margin: 0 auto; padding: 26px 12px 56px; }
+
+/* ---------- raised cards ---------- */
+.card {
+  background: var(--card); border: 0; border-radius: 28px;
+  box-shadow: 10px 10px 24px var(--shadow-dark), -8px -8px 22px var(--shadow-light);
+}
+.table { --bs-table-bg: transparent; --bs-table-color: var(--text); --bs-table-hover-bg: rgba(10, 90, 51, .06);
+         --bs-table-hover-color: var(--text); --bs-table-border-color: rgba(10, 90, 51, .12); }
+.table thead th { color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .5px; }
+.table-hover tbody tr { cursor: pointer; }
+.table-responsive.card { overflow: hidden; padding: 6px 10px; }
+.modal-content { background: var(--card); border: 0; border-radius: 24px; }
+.modal-header, .modal-footer { border-color: rgba(10, 90, 51, .12); }
+.alert { border: 0; border-radius: 16px; }
+
+/* ---------- inputs & buttons ---------- */
+.form-control, .form-select {
+  background-color: var(--card); border: 0; border-radius: 14px; padding: 12px 16px; color: var(--text);
+  box-shadow: inset 4px 4px 9px var(--shadow-dark), inset -4px -4px 9px var(--shadow-light);
+}
+.form-control:focus, .form-select:focus {
+  background-color: var(--card); color: var(--text);
+  box-shadow: inset 4px 4px 9px var(--shadow-dark), inset -4px -4px 9px var(--shadow-light), 0 0 0 3px rgba(10, 90, 51, .25);
+}
+.form-label { font-weight: 600; font-size: .9rem; }
+.btn { border-radius: 14px; font-weight: 600; }
+.btn-primary {
+  --bs-btn-bg: #0a5a33; --bs-btn-border-color: #0a5a33;
+  --bs-btn-hover-bg: #084a2a; --bs-btn-hover-border-color: #084a2a;
+  --bs-btn-active-bg: #063d22; --bs-btn-active-border-color: #063d22;
+  --bs-btn-disabled-bg: #0a5a33; --bs-btn-disabled-border-color: #0a5a33;
+  --bs-btn-focus-shadow-rgb: 10, 90, 51;
+}
+.btn-outline-primary {
+  --bs-btn-color: #0a5a33; --bs-btn-border-color: #0a5a33;
+  --bs-btn-hover-bg: #0a5a33; --bs-btn-hover-border-color: #0a5a33;
+  --bs-btn-active-bg: #0a5a33; --bs-btn-active-border-color: #0a5a33;
+  --bs-btn-focus-shadow-rgb: 10, 90, 51;
+}
+.btn-outline-secondary { --bs-btn-color: #4f6f5f; --bs-btn-border-color: #9db8a8; --bs-btn-hover-bg: #4f6f5f; --bs-btn-hover-border-color: #4f6f5f; }
+
+/* ---------- login ---------- */
+.login-card { max-width: 430px; margin: 7vh auto 0; }
+.login-brand {
+  background: linear-gradient(135deg, #0a5a33, #064427); border-radius: 18px; padding: 16px;
+  display: flex; justify-content: center; margin-bottom: 22px; box-shadow: 0 10px 22px rgba(6, 68, 39, .3);
+}
+.login-brand .brand-logo { height: 42px; }
+.back-home { display: block; text-align: center; margin-top: 18px; font-weight: 600; font-size: .9rem; text-decoration: none; }
+
+/* ---------- dashboard ---------- */
+.badge-soft {
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px;
+  font-size: .75rem; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--green-800);
+  background: var(--card); box-shadow: inset 4px 4px 9px var(--shadow-dark), inset -4px -4px 9px var(--shadow-light);
+}
+.welcome { padding: 32px 36px; margin-bottom: 26px; }
+.welcome h1 { font-weight: 800; color: var(--green-900); margin: 16px 0 4px; }
+.stat { padding: 30px 16px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.stat .icon {
+  width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center;
+  color: var(--green-700); font-size: 1.1rem; background: var(--card);
+  box-shadow: 5px 5px 12px var(--shadow-dark), -4px -4px 10px var(--shadow-light);
+}
+.stat .num { font-size: 2.4rem; font-weight: 800; margin-top: 8px; color: var(--green-900); line-height: 1.1; }
+.stat .label { font-weight: 600; color: var(--muted); margin-top: 4px; font-size: .9rem; }
+
+/* ---------- children ---------- */
+.child-photo { width: 110px; height: 110px; object-fit: cover; border-radius: 16px; background: #d5e6dc; }
+.field-sensitive { border-left: 3px solid #d97706; padding-left: 10px; }
