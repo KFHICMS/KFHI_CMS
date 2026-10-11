@@ -43,8 +43,10 @@ class DashboardController extends Controller
             default => throw new \RuntimeException('Unsupported database driver for dashboard chart data.'),
         };
 
+        $yearStart = now()->startOfYear();
         $monthlyActions = AuditLog::query()
-            ->whereBetween('created_at', [now()->startOfYear(), now()->endOfYear()])
+            ->where('created_at', '>=', $yearStart)
+            ->where('created_at', '<', $yearStart->copy()->addYear())
             ->selectRaw("{$monthExpression} AS month, COUNT(*) AS total")
             ->groupBy('month')
             ->pluck('total', 'month');
@@ -53,7 +55,7 @@ class DashboardController extends Controller
             'pie_labels' => $programCounts->pluck('program_name')->all(),
             'pie_values' => $programCounts->pluck('total')->map(fn ($total): int => (int) $total)->all(),
             'bar_labels' => collect(range(1, 12))
-                ->map(fn (int $month): string => now()->startOfYear()->addMonths($month - 1)->format('M'))
+                ->map(fn (int $month): string => $yearStart->copy()->addMonths($month - 1)->format('M'))
                 ->all(),
             'bar_values' => collect(range(1, 12))
                 ->map(fn (int $month): int => (int) $monthlyActions->get($month, 0))
@@ -69,36 +71,37 @@ class DashboardController extends Controller
         return view('admin.dashboard', compact('stats', 'chartData', 'messages'));
     }
 
-    public function childOfficer(): View
+    public function childOfficerDashboard(): View
     {
         $monthStart = now()->startOfMonth();
-        $monthEnd = now()->endOfMonth();
+        $nextMonthStart = $monthStart->copy()->addMonth();
 
         $stats = [
             'active_children' => Child::query()->where('status', 'active')->count(),
             'active_qr_codes' => QrToken::query()->where('is_active', true)->count(),
             'qr_scans' => AuditLog::query()
                 ->where('action', 'SCAN_QR')
-                ->whereBetween('created_at', [$monthStart, $monthEnd])
+                ->where('created_at', '>=', $monthStart)
+                ->where('created_at', '<', $nextMonthStart)
                 ->count(),
             'updated_children' => Child::query()
-                ->whereBetween('updated_at', [$monthStart, $monthEnd])
+                ->where('updated_at', '>=', $monthStart)
+                ->where('updated_at', '<', $nextMonthStart)
                 ->count(),
         ];
 
         $recentChildren = Child::query()
-            ->select('created_at')
             ->latest()
             ->limit(5)
-            ->get();
+            ->get(['id', 'created_at', 'full_name', 'child_code']);
 
         return view('child_officer.childdashboard', compact('stats', 'recentChildren'));
     }
 
-    public function fieldOfficer(): View
+    public function fieldOfficerDashboard(): View
     {
-        $todayStart = today();
-        $todayEnd = today()->endOfDay();
+        $today = now()->startOfDay();
+        $tomorrow = $today->copy()->addDay();
 
         $stats = [
             'programs' => Child::query()
@@ -107,23 +110,24 @@ class DashboardController extends Controller
                 ->distinct()
                 ->count('program'),
             'children_registered_today' => Child::query()
-                ->whereBetween('created_at', [$todayStart, $todayEnd])
+                ->where('created_at', '>=', $today)
+                ->where('created_at', '<', $tomorrow)
                 ->count(),
             'qr_scans_today' => AuditLog::query()
                 ->where('action', 'SCAN_QR')
-                ->whereBetween('created_at', [$todayStart, $todayEnd])
+                ->where('created_at', '>=', $today)
+                ->where('created_at', '<', $tomorrow)
                 ->count(),
-            'qr_codes_generated_today' => AuditLog::query()
-                ->where('action', 'GENERATE_QR')
-                ->whereBetween('created_at', [$todayStart, $todayEnd])
+            'qr_codes_generated_today' => QrToken::query()
+                ->where('created_at', '>=', $today)
+                ->where('created_at', '<', $tomorrow)
                 ->count(),
         ];
 
         $recentChildren = Child::query()
-            ->select('created_at')
             ->latest()
             ->limit(5)
-            ->get();
+            ->get(['id', 'created_at', 'full_name', 'child_code', 'photo_path']);
 
         return view('field_officer.fieldofficerdashboard', compact('stats', 'recentChildren'));
     }

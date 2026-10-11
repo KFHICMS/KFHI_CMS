@@ -83,26 +83,26 @@
             </div>
         </aside>
 
-        <main class="min-w-0 flex-1 flex flex-col h-screen overflow-hidden relative">
+        <main class="min-w-0 flex-1 flex flex-col h-screen overflow-hidden">
+            <header class="shrink-0 sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/80 px-4 backdrop-blur sm:px-12 lg:px-30">
+                <div class="flex items-center gap-3">
+                    <button id="sidebarToggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50">
+                        <i id="sidebarToggleIcon" class="fa-solid fa-bars" aria-hidden="true"></i>
+                    </button>
+                    <div>
+                        <p class="text-xs font-medium text-slate-400">Workspace / Field Officer</p>
+                        <h1 class="text-lg font-bold tracking-tight text-slate-900">Dashboard</h1>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="hidden rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 sm:inline-flex sm:items-center sm:gap-2">
+                        <span class="h-2 w-2 rounded-full bg-emerald-500"></span> Online
+                    </span>
+                    <span class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-800">F</span>
+                </div>
+            </header>
             <div class="flex-1 overflow-y-auto dashboard-scrollbar">
-                <header class="shrink-0 sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/80 px-4 backdrop-blur sm:px-12 lg:px-30">
-                    <div class="flex items-center gap-3">
-                        <button id="sidebarToggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50">
-                            <i id="sidebarToggleIcon" class="fa-solid fa-bars" aria-hidden="true"></i>
-                        </button>
-                        <div>
-                            <p class="text-xs font-medium text-slate-400">Workspace / Field Officer</p>
-                            <h1 class="text-lg font-bold tracking-tight text-slate-900">Dashboard</h1>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <span class="hidden rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 sm:inline-flex sm:items-center sm:gap-2">
-                            <span class="h-2 w-2 rounded-full bg-emerald-500"></span> Online
-                        </span>
-                        <span class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-800">FO</span>
-                    </div>
-                </header>
-
+            <div class="flex-1 overflow-y-auto dashboard-scrollbar">
                 <div class="mx-auto max-w-7xl space-y-7 px-4 py-7 sm:px-6 lg:px-10 lg:py-9">
                     <!-- Welcome Section -->
                     <section class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-700 px-6 py-7 text-white shadow-xl shadow-emerald-900/10 sm:px-9 sm:py-9">

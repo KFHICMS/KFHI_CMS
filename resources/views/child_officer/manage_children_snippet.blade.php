@@ -248,6 +248,17 @@
     const BASE_URL = '/child-officer/children';
     const CSRF_TOKEN = '{{ csrf_token() }}';
 
+    function escapeHtml(value) {
+        const escapedCharacters = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;',
+        };
+        return String(value ?? '').replace(/[&<>"']/g, (character) => escapedCharacters[character]);
+    }
+
     /* ────────── Section Toggling ────────── */
     function showManageChildren() {
         document.getElementById('dashboardOverviewSection').classList.add('hidden');
@@ -290,8 +301,28 @@
         const name = document.getElementById('qrChildName').textContent;
         const code = document.getElementById('qrChildCode').textContent;
         const w = window.open('', '_blank');
-        w.document.write(`<html><head><title>QR - ${code}</title></head><body style="text-align:center;font-family:sans-serif;padding:40px"><h2>${name}</h2><p>${code}</p><img src="${img}" style="width:250px;height:250px"><script>setTimeout(()=>window.print(),500)<\/script></body></html>`);
-        w.document.close();
+
+        if (!w) {
+            alert('Please allow pop-ups to print the QR code.');
+            return;
+        }
+
+        w.document.title = `QR - ${code}`;
+        w.document.body.style.cssText = 'text-align:center;font-family:sans-serif;padding:40px';
+
+        const heading = w.document.createElement('h2');
+        heading.textContent = name;
+
+        const codeLabel = w.document.createElement('p');
+        codeLabel.textContent = code;
+
+        const image = w.document.createElement('img');
+        image.src = img;
+        image.alt = `QR code for ${code}`;
+        image.style.width = '250px';
+        image.style.height = '250px';
+        w.document.body.replaceChildren(heading, codeLabel, image);
+        window.setTimeout(() => w.print(), 500);
     }
 
     /* ────────── Load Children (AJAX) ────────── */
@@ -350,24 +381,34 @@
         errorState.classList.add('hidden');
         tbody.innerHTML = children.map(c => `
             <tr class="hover:bg-slate-50/50 transition">
-                <td class="whitespace-nowrap px-6 py-4 font-medium text-emerald-700">${c.child_code}</td>
+                <td class="whitespace-nowrap px-6 py-4 font-medium text-emerald-700">${escapeHtml(c.child_code)}</td>
                 <td class="px-6 py-4">
-                    <div class="font-semibold text-slate-900">${c.name_english ?? ''}</div>
-                    <div class="text-xs text-slate-500">${c.name_korean ?? ''}</div>
+                    <div class="font-semibold text-slate-900">${escapeHtml(c.name_english)}</div>
+                    <div class="text-xs text-slate-500">${escapeHtml(c.name_korean)}</div>
                 </td>
-                <td class="whitespace-nowrap px-6 py-4 text-slate-600">${c.gender ?? '-'}</td>
-                <td class="whitespace-nowrap px-6 py-4 text-slate-600">${c.area ?? '-'}</td>
-                <td class="whitespace-nowrap px-6 py-4 text-slate-600">${c.office_name ?? '-'}</td>
-                <td class="whitespace-nowrap px-6 py-4 text-slate-600">${c.grade ?? '-'}</td>
+                <td class="whitespace-nowrap px-6 py-4 text-slate-600">${escapeHtml(c.gender ?? '-')}</td>
+                <td class="whitespace-nowrap px-6 py-4 text-slate-600">${escapeHtml(c.area ?? '-')}</td>
+                <td class="whitespace-nowrap px-6 py-4 text-slate-600">${escapeHtml(c.office_name ?? '-')}</td>
+                <td class="whitespace-nowrap px-6 py-4 text-slate-600">${escapeHtml(c.grade ?? '-')}</td>
                 <td class="whitespace-nowrap px-6 py-4 text-right">
                     <div class="flex items-center justify-end gap-2">
-                        <button type="button" title="View QR" onclick="openQRModal('${c.child_code}', '${(c.name_english ?? '').replace(/'/g, "\\'")}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-sky-50 hover:text-sky-600"><i class="fa-solid fa-qrcode"></i></button>
-                        <button type="button" title="Edit" onclick='editChild(${JSON.stringify(c)})' class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-amber-50 hover:text-amber-600"><i class="fa-solid fa-pen"></i></button>
-                        <button type="button" title="Delete" onclick="deleteChild(${c.id})" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"><i class="fa-solid fa-trash"></i></button>
+                        <button type="button" title="View QR" data-action="view-qr" data-child-code="${escapeHtml(c.child_code)}" data-child-name="${escapeHtml(c.name_english)}" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-sky-50 hover:text-sky-600"><i class="fa-solid fa-qrcode"></i></button>
+                        <button type="button" title="Edit" data-action="edit-child" data-child="${escapeHtml(JSON.stringify(c))}" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-amber-50 hover:text-amber-600"><i class="fa-solid fa-pen"></i></button>
+                        <button type="button" title="Delete" data-action="delete-child" data-child-id="${escapeHtml(c.id)}" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 </td>
             </tr>
         `).join('');
+
+        tbody.querySelectorAll('[data-action="view-qr"]').forEach((button) => {
+            button.addEventListener('click', () => openQRModal(button.dataset.childCode, button.dataset.childName));
+        });
+        tbody.querySelectorAll('[data-action="edit-child"]').forEach((button) => {
+            button.addEventListener('click', () => editChild(JSON.parse(button.dataset.child)));
+        });
+        tbody.querySelectorAll('[data-action="delete-child"]').forEach((button) => {
+            button.addEventListener('click', () => deleteChild(button.dataset.childId));
+        });
     }
 
     /* ────────── Edit Child ────────── */
@@ -422,7 +463,7 @@
     async function deleteChild(id) {
         if (!confirm('Are you sure you want to delete this child record?')) return;
         try {
-            await fetch(`${BASE_URL}/${id}`, {
+            const response = await fetch(`${BASE_URL}/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': CSRF_TOKEN,
@@ -430,6 +471,11 @@
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             });
+
+            if (!response.ok) {
+                throw new Error(`Request failed with status ${response.status}`);
+            }
+
             loadChildren();
         } catch (err) {
             alert('Failed to delete: ' + err.message);

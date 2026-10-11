@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in · KFHI Admin</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body class="center">
+  <main class="card auth">
+    <div class="brand">KFHI<span>.</span></div>
+    <h1 id="title">Admin sign in</h1>
+    <p class="muted" id="sub">Child Management System</p>
+
+    <div id="msg" class="alert" hidden></div>
+
+    <form id="loginForm" novalidate>
+      <label>Email
+        <input type="email" name="email" autocomplete="username" required>
+      </label>
+      <label>Password
+        <input type="password" name="password" autocomplete="current-password" required>
+      </label>
+      <button class="btn btn-primary" type="submit">Sign in</button>
+    </form>
+
+    <form id="changeForm" hidden novalidate>
+      <label>Temporary password
+        <input type="password" name="current_password" autocomplete="current-password" required>
+      </label>
+      <label>New password
+        <input type="password" name="password" autocomplete="new-password" required>
+      </label>
+      <label>Confirm new password
+        <input type="password" name="password_confirmation" autocomplete="new-password" required>
+      </label>
+      <p class="hint">At least 12 characters, with upper and lower case letters, a number and a symbol.</p>
+      <button class="btn btn-primary" type="submit">Change password</button>
+    </form>
+  </main>
+
+  <script src="assets/app.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const params = new URLSearchParams(location.search);
+    let loggedUser = null;
+
+    function showMsg(text, kind = 'error') {
+      const m = $('msg');
+      m.textContent = text;
+      m.className = 'alert ' + kind;
+      m.hidden = false;
+    }
+
+    function showChange() {
+      $('loginForm').hidden = true;
+      $('changeForm').hidden = false;
+      $('title').textContent = 'Set a new password';
+      $('sub').textContent = 'Your temporary password must be changed before you continue.';
+    }
+
+    // After login (and after a forced password change): admins only.
+    async function finish() {
+      if (!loggedUser.permissions.includes('manage_users')) {
+        await endSession();
+        $('changeForm').hidden = true;
+        $('loginForm').hidden = false;
+        $('title').textContent = 'Admin sign in';
+        $('sub').textContent = 'Child Management System';
+        showMsg('This panel is for administrators only.');
+        return;
+      }
+      location.href = 'users.html';
+    }
+
+    if (params.get('expired')) showMsg('Your session expired. Please sign in again.', 'info');
+    if (params.get('change') && getToken()) {
+      api('/me').then((u) => { loggedUser = u; showChange(); }).catch(() => {});
+    }
+
+    $('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const f = e.target, btn = f.querySelector('button');
+      btn.disabled = true;
+      $('msg').hidden = true;
+      try {
+        const data = await api('/login', {
+          method: 'POST',
+          body: { email: f.email.value.trim(), password: f.password.value },
+        });
+        setToken(data.token);
+        loggedUser = data.user;
+        if (data.user.must_change_password) showChange(); else await finish();
+      } catch (err) {
+        showMsg(errorText(err));
+        f.password.value = '';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    $('changeForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const f = e.target, btn = f.querySelector('button');
+      btn.disabled = true;
+      $('msg').hidden = true;
+      try {
+        await api('/change-password', {
+          method: 'POST',
+          body: {
+            current_password: f.current_password.value,
+            password: f.password.value,
+            password_confirmation: f.password_confirmation.value,
+          },
+        });
+        await finish();
+      } catch (err) {
+        showMsg(errorText(err));
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

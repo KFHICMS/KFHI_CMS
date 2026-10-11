@@ -34,6 +34,21 @@ class AuthController extends Controller
             ]);
         }
 
+        if (! $user->is_active) {
+            AuditLog::create([
+                'user_id'    => $user->id,
+                'action'     => 'LOGIN_BLOCKED',
+                'ip_address' => $request->ip(),
+                'details'    => 'Login blocked: account is deactivated',
+            ]);
+
+            return response()->json([
+                'message' => 'Your account is disabled. Please contact the administrator.',
+            ], 403);
+        }
+
+        $user->forceFill(['last_login_at' => now()])->save();
+
         $token = $user->createToken('auth-token')->plainTextToken;
 
         AuditLog::create([
@@ -49,6 +64,7 @@ class AuthController extends Controller
                 'email'       => $user->email,
                 'roles'       => $user->getRoleNames(),
                 'permissions' => $user->getAllPermissions()->pluck('name'),
+                'must_change_password' => $user->must_change_password,
             ],
             'token' => $token,
         ]);
@@ -65,6 +81,7 @@ class AuthController extends Controller
             'email'       => $user->email,
             'roles'       => $user->getRoleNames(),
             'permissions' => $user->getAllPermissions()->pluck('name'),
+            'must_change_password' => $user->must_change_password,
         ]);
     }
 
