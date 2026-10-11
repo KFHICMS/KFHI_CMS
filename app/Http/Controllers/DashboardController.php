@@ -6,32 +6,67 @@ use App\Models\AuditLog;
 use App\Models\Child;
 use App\Models\Message;
 use App\Models\QrToken;
+use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     public function index(): View
     {
-        // Example data (replace with actual Eloquent queries like Child::count())
         $stats = [
-            'total_children' => Child::count(),
-            'active_programs' => Child::whereNotNull('program')->where('program', '!=', '')->distinct()->count('program'),
-            'officers' => \App\Models\User::count(),
-            'activities' => AuditLog::count(),
+            'total_children' => Child::query()->count(),
+            'active_programs' => Child::query()
+                ->whereNotNull('program')
+                ->where('program', '<>', '')
+                ->distinct()
+                ->count('program'),
+            'officers' => User::query()
+                ->whereHas('roles', fn ($query) => $query->where('name', 'field_officer'))
+                ->count(),
+            'recorded_actions' => AuditLog::query()
+                ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
+                ->count(),
         ];
 
-        $programs = Child::whereNotNull('program')->where('program', '!=', '')->select('program', \DB::raw('count(*) as count'))->groupBy('program')->pluck('count', 'program')->toArray();
-        
+        $programCounts = Child::query()
+            ->selectRaw("COALESCE(NULLIF(program, ''), 'Unassigned') AS program_name, COUNT(*) AS total")
+            ->groupByRaw("COALESCE(NULLIF(program, ''), 'Unassigned')")
+            ->orderBy('program_name')
+            ->get();
+
+        $monthExpression = match (DB::connection()->getDriverName()) {
+            'mysql', 'mariadb', 'sqlsrv' => 'MONTH(created_at)',
+            'sqlite' => "CAST(strftime('%m', created_at) AS INTEGER)",
+            'pgsql' => 'CAST(EXTRACT(MONTH FROM created_at) AS INTEGER)',
+            default => throw new \RuntimeException('Unsupported database driver for dashboard chart data.'),
+        };
+
+        $yearStart = now()->startOfYear();
+        $monthlyActions = AuditLog::query()
+            ->where('created_at', '>=', $yearStart)
+            ->where('created_at', '<', $yearStart->copy()->addYear())
+            ->selectRaw("{$monthExpression} AS month, COUNT(*) AS total")
+            ->groupByRaw($monthExpression)
+            ->pluck('total', 'month');
+
         $chartData = [
-            'pie_labels' => array_keys($programs) ?: ['No Data'],
-            'pie_values' => array_values($programs) ?: [1],
-            'bar_labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-            'bar_values' => [12, 19, 15, 25, 22, 30],
+            'pie_labels' => $programCounts->pluck('program_name')->all(),
+            'pie_values' => $programCounts->pluck('total')->map(fn ($total): int => (int) $total)->all(),
+            'bar_labels' => collect(range(1, 12))
+                ->map(fn (int $month): string => $yearStart->copy()->addMonths($month - 1)->format('M'))
+                ->all(),
+            'bar_values' => collect(range(1, 12))
+                ->map(fn (int $month): int => (int) $monthlyActions->get($month, 0))
+                ->all(),
         ];
 
-        // Fetch messages for the authenticated user (admin)
-        $messages = Message::with('sender')->where('receiver_id', Auth::id())->orderBy('created_at', 'desc')->get();
+        $messages = Message::query()
+            ->with('sender:id,name')
+            ->where('receiver_id', Auth::id())
+            ->latest()
+            ->get();
 
         return view('admin.dashboard', compact('stats', 'chartData', 'messages'));
     }
@@ -58,7 +93,7 @@ class DashboardController extends Controller
         $recentChildren = Child::query()
             ->latest()
             ->limit(5)
-            ->get(['id', 'created_at', 'full_name', 'child_code', 'photo_path']);
+            ->get(['id', 'created_at', 'full_name', 'child_code']);
 
         return view('child_officer.childdashboard', compact('stats', 'recentChildren'));
     }

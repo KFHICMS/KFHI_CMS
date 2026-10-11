@@ -101,7 +101,6 @@
                     <span class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-800">F</span>
                 </div>
             </header>
-
             <div class="flex-1 overflow-y-auto dashboard-scrollbar">
                 <div class="mx-auto max-w-7xl space-y-7 px-4 py-7 sm:px-6 lg:px-10 lg:py-9">
                     <!-- Welcome Section -->

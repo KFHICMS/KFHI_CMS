@@ -62,14 +62,15 @@ document.addEventListener('keydown', (event) => {
 });
 
 const chartData = JSON.parse(document.getElementById('dashboard-chart-data').textContent);
+const hasProgramData = chartData.pie_values.some((value) => value > 0);
 
 new window.Chart(document.getElementById('donutChart'), {
     type: 'doughnut',
     data: {
-        labels: chartData.pie_labels,
+        labels: hasProgramData ? chartData.pie_labels : ['No program data'],
         datasets: [{
-            data: chartData.pie_values,
-            backgroundColor: ['#047857', '#34d399', '#fbbf24', '#38bdf8'],
+            data: hasProgramData ? chartData.pie_values : [1],
+            backgroundColor: hasProgramData ? ['#047857', '#34d399', '#fbbf24', '#38bdf8'] : ['#e2e8f0'],
             borderColor: '#ffffff',
             borderWidth: 4,
             hoverOffset: 6
@@ -83,6 +84,7 @@ new window.Chart(document.getElementById('donutChart'), {
         plugins: {
             legend: {
                 position: 'bottom',
+                display: hasProgramData,
                 labels: {
                     color: '#475569',
                     font: { family: 'Inter, ui-sans-serif, system-ui, sans-serif', size: 13, weight: '500' },
@@ -101,7 +103,7 @@ new window.Chart(document.getElementById('barGraph'), {
     data: {
         labels: chartData.bar_labels,
         datasets: [{
-            label: 'Activities completed',
+            label: 'Logged actions',
             data: chartData.bar_values,
             backgroundColor: '#059669',
             hoverBackgroundColor: '#047857',

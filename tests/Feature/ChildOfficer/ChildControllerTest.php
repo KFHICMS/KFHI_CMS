@@ -44,6 +44,31 @@ class ChildControllerTest extends TestCase
             ->assertJsonMissingPaths(['0.medical_info', '0.emergency_contacts']);
     }
 
+    public function test_json_child_lookup_can_match_a_scanned_code_exactly(): void
+    {
+        Child::create([
+            'child_code' => 'CH-301',
+            'full_name' => 'Exact Child',
+            'name_english' => 'Exact Child',
+            'school' => 'North School',
+            'grade' => '4',
+        ]);
+        Child::create([
+            'child_code' => 'CH-301-2',
+            'full_name' => 'Similar Child',
+            'name_english' => 'Similar Child',
+        ]);
+
+        $response = $this->getJson('/child-officer/children?child_code=CH-301');
+
+        $response->assertOk()
+            ->assertJsonCount(1)
+            ->assertJsonPath('0.child_code', 'CH-301')
+            ->assertJsonPath('0.name_english', 'Exact Child')
+            ->assertJsonPath('0.school', 'North School')
+            ->assertJsonPath('0.grade', '4');
+    }
+
     public function test_html_child_list_still_renders_the_paginated_view(): void
     {
         $response = $this->withoutVite()->get('/child-officer/children');

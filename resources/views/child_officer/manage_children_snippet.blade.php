@@ -256,7 +256,6 @@
             '"': '&quot;',
             "'": '&#039;',
         };
-
         return String(value ?? '').replace(/[&<>"']/g, (character) => escapedCharacters[character]);
     }
 
@@ -322,7 +321,6 @@
         image.alt = `QR code for ${code}`;
         image.style.width = '250px';
         image.style.height = '250px';
-
         w.document.body.replaceChildren(heading, codeLabel, image);
         window.setTimeout(() => w.print(), 500);
     }
@@ -465,7 +463,7 @@
     async function deleteChild(id) {
         if (!confirm('Are you sure you want to delete this child record?')) return;
         try {
-            await fetch(`${BASE_URL}/${id}`, {
+            const response = await fetch(`${BASE_URL}/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': CSRF_TOKEN,
@@ -473,6 +471,10 @@
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             });
+            if (!response.ok) {
+                throw new Error(`Request failed with status ${response.status}`);
+            }
+
             loadChildren();
         } catch (err) {
             alert('Failed to delete: ' + err.message);

@@ -119,7 +119,7 @@
                             <span class="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">Programs</span>
                         </div>
                         <p class="mt-5 text-3xl font-extrabold tracking-tight text-slate-900">{{ number_format($stats['active_programs']) }}</p>
-                        <p class="mt-1 text-sm text-slate-500">Active programs</p>
+                        <p class="mt-1 text-sm text-slate-500">Programs represented</p>
                     </article>
 
                     <article class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
@@ -136,8 +136,8 @@
                             <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-50 text-xl text-violet-700"><i class="fa-solid fa-chart-line"></i></span>
                             <span class="rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-semibold text-violet-700">This month</span>
                         </div>
-                        <p class="mt-5 text-3xl font-extrabold tracking-tight text-slate-900">{{ number_format($stats['activities']) }}</p>
-                        <p class="mt-1 text-sm text-slate-500">Activities completed</p>
+                        <p class="mt-5 text-3xl font-extrabold tracking-tight text-slate-900">{{ number_format($stats['recorded_actions']) }}</p>
+                        <p class="mt-1 text-sm text-slate-500">Actions logged this month</p>
                     </article>
                 </section>
 
@@ -215,18 +215,28 @@
                 <section class="grid grid-cols-1 gap-5 xl:grid-cols-2">
                     <article class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
                         <div>
-                            <h3 class="font-bold text-slate-900">Children by category</h3>
-                            <p class="mt-1 text-sm text-slate-500">Distribution across support categories</p>
+                            <h3 class="font-bold text-slate-900">Children by program</h3>
+                            <p class="mt-1 text-sm text-slate-500">Distribution across recorded child programs</p>
                         </div>
-                        <div class="mx-auto mt-5 h-64 max-w-sm"><canvas id="donutChart" aria-label="Children distribution by category" role="img"></canvas></div>
+                        <div class="relative mx-auto mt-5 h-64 max-w-sm">
+                            <canvas id="donutChart" aria-label="Children distribution by program" role="img"></canvas>
+                            @if (empty($chartData['pie_values']))
+                                <p class="pointer-events-none absolute inset-0 flex items-center justify-center text-center text-sm font-medium text-slate-500">No program data yet</p>
+                            @endif
+                        </div>
                     </article>
 
                     <article class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
                         <div>
-                            <h3 class="font-bold text-slate-900">Monthly activities</h3>
-                            <p class="mt-1 text-sm text-slate-500">Activity completion overview</p>
+                            <h3 class="font-bold text-slate-900">Monthly logged actions</h3>
+                            <p class="mt-1 text-sm text-slate-500">Actions recorded in the audit log this year</p>
                         </div>
-                        <div class="mt-5 h-64"><canvas id="barGraph" aria-label="Monthly activities overview" role="img"></canvas></div>
+                        <div class="relative mt-5 h-64">
+                            <canvas id="barGraph" aria-label="Monthly logged actions overview" role="img"></canvas>
+                            @if (empty(array_filter($chartData['bar_values'])))
+                                <p class="pointer-events-none absolute inset-x-0 top-1/3 text-center text-sm font-medium text-slate-500">No logged actions this year</p>
+                            @endif
+                        </div>
                     </article>
                 </section>
 
