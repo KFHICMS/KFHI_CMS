@@ -8,6 +8,7 @@ use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
 {
@@ -65,6 +66,8 @@ class AuthController extends Controller
                 'email'       => $user->email,
                 'roles'       => $user->getRoleNames(),
                 'permissions' => $user->getAllPermissions()->pluck('name'),
+                'username'    => $user->username,
+                'must_change_password' => (bool) $user->must_change_password,
             ],
             'token' => $token,
         ]);
@@ -79,6 +82,8 @@ class AuthController extends Controller
             'id'          => $user->id,
             'name'        => $user->name,
             'email'       => $user->email,
+            'username'    => $user->username,
+            'must_change_password' => (bool) $user->must_change_password,
             'roles'       => $user->getRoleNames(),
             'permissions' => $user->getAllPermissions()->pluck('name'),
         ]);
@@ -98,5 +103,55 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Logged out successfully',
         ]);
+    }
+
+        // POST /api/change-password
+    public function changePassword(Request $request)
+    {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'current_password' => ['required', 'string'],
+            'password'         => ['required', 'string', 'confirmed', 'different:current_password',
+                                   Password::min(8)->mixedCase()->numbers()],
+        ]);
+
+        if (! Hash::check($data['current_password'], $user->password)) {
+            AuditLog::create([
+                'user_id'     => $user->id,
+                'action'      => 'PASSWORD_CHANGE_FAILED',
+                'entity_type' => 'User',
+                'entity_id'   => $user->id,
+                'ip_address'  => $request->ip(),
+                'details'     => 'Wrong current password',
+            ]);
+            throw ValidationException::withMessages([
+                'current_password' => ['The current password is incorrect.'],
+            ]);
+        }
+
+        $user->forceFill([
+            'password'             => $data['password'],
+            'must_change_password' => false,
+            'password_changed_at'  => now(),
+        ])->save();
+
+        // sign out all other sessions, keep this one
+        $current = $user->currentAccessToken();
+        $others  = $user->tokens();
+        if ($current && isset($current->id)) {
+            $others->where('id', '!=', $current->id);
+        }
+        $others->delete();
+
+        AuditLog::create([
+            'user_id'     => $user->id,
+            'action'      => 'PASSWORD_CHANGED',
+            'entity_type' => 'User',
+            'entity_id'   => $user->id,
+            'ip_address'  => $request->ip(),
+        ]);
+
+        return response()->json(['message' => 'Password changed.']);
     }
 }

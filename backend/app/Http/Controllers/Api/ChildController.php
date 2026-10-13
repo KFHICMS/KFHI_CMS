@@ -7,10 +7,11 @@ use App\Models\Child;
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class ChildController extends Controller
 {
-    // GET /api/children?q=&program=&status=active|archived|all&page=&per_page=
+    // GET /api/children?q=&program=&area=&office_code=&gender=&service_state=&sponsor_state=&status=&page=&per_page=
     public function index(Request $request)
     {
         $user = $request->user();
@@ -26,12 +27,17 @@ class ChildController extends Controller
             $term = '%' . addcslashes($request->input('q'), '%_\\') . '%';
             $query->where(function ($w) use ($term) {
                 $w->where('full_name', 'like', $term)
-                  ->orWhere('child_code', 'like', $term);
+                  ->orWhere('child_code', 'like', $term)
+                  ->orWhere('name_korean', 'like', $term)
+                  ->orWhere('alias', 'like', $term);
             });
         }
 
-        if ($request->filled('program')) {
-            $query->where('program', $request->input('program'));
+        // exact-match filters (all non-sensitive, all indexed or low-cardinality)
+        foreach (['program', 'area', 'office_code', 'gender', 'service_state', 'sponsor_state'] as $filter) {
+            if ($request->filled($filter)) {
+                $query->where($filter, $request->input($filter));
+            }
         }
 
         $perPage = min(max($request->integer('per_page', 15), 1), 100);
@@ -45,10 +51,13 @@ class ChildController extends Controller
     // POST /api/children
     public function store(Request $request)
     {
-        $data = $this->validateChild($request);
+        $data = $this->validateChild($request, creating: true);
 
-        $data['child_code'] = 'KFHI-' . date('Y') . '-' .
-            str_pad((int) Child::max('id') + 1, 4, '0', STR_PAD_LEFT);
+        // Child Code: use the one entered by staff (e.g. LKA005001); generate one only if left empty.
+        if (empty($data['child_code'])) {
+            $data['child_code'] = 'KFHI-' . date('Y') . '-' .
+                str_pad((int) Child::max('id') + 1, 4, '0', STR_PAD_LEFT);
+        }
         $data['status'] = 'active';
 
         $guardians = $data['guardians'] ?? [];
@@ -73,7 +82,7 @@ class ChildController extends Controller
         return response()->json($child->load('guardians')->visibleTo($request->user()));
     }
 
-    // PUT /api/children/{child}
+    // PUT /api/children/{child}   (the Child Code can't be changed: QR codes and ID cards depend on it)
     public function update(Request $request, Child $child)
     {
         $this->authorizeChild($request, $child);
@@ -157,18 +166,38 @@ class ChildController extends Controller
         );
     }
 
-    private function validateChild(Request $request): array
+    private function validateChild(Request $request, bool $creating = false): array
     {
-        return $request->validate([
+        $rules = [
             'full_name'             => ['required', 'string', 'max:255'],
+            'name_korean'           => ['nullable', 'string', 'max:255'],
+            'alias'                 => ['nullable', 'string', 'max:255'],
             'date_of_birth'         => ['nullable', 'date', 'before_or_equal:today'],
             'gender'                => ['nullable', 'string', 'max:20'],
+            'religion'              => ['nullable', 'string', 'max:100'],
             'address'               => ['nullable', 'string'],
+            'area'                  => ['nullable', 'string', 'max:150'],
+            'gnd'                   => ['nullable', 'string', 'max:150'],
+            'office_code'           => ['nullable', 'string', 'max:50'],
+            'office_name'           => ['nullable', 'string', 'max:150'],
+            'service_state'         => ['nullable', 'string', 'max:100'],
+            'sponsor_state'         => ['nullable', 'string', 'max:100'],
+            'guardian_type'         => ['nullable', 'string', 'max:100'],
+            'caregiver'             => ['nullable', 'string', 'max:255'],
             'school'                => ['nullable', 'string'],
+            'curriculum'            => ['nullable', 'string', 'max:150'],
             'grade'                 => ['nullable', 'string'],
             'education_status'      => ['nullable', 'string'],
-            'medical_info'          => ['nullable', 'string'],
+            'favorite_subject'      => ['nullable', 'string', 'max:150'],
+            'pass_fail'             => ['nullable', Rule::in(['Pass', 'Fail'])],
+            'dream'                 => ['nullable', 'string', 'max:255'],
+            'dream_description'     => ['nullable', 'string'],
+            'favorite_activity'     => ['nullable', 'string', 'max:255'],
+            'health'                => ['nullable', 'string'],
+            'medical_info'          => ['nullable', 'string'],     // shown as "Health description"
             'special_requirements'  => ['nullable', 'string'],
+            'disability_type'       => ['nullable', 'string', 'max:255'],
+            'disability_description'=> ['nullable', 'string'],
             'emergency_contacts'    => ['nullable', 'string'],
             'program'               => ['nullable', 'string'],
             'registration_date'     => ['nullable', 'date'],
@@ -178,7 +207,14 @@ class ChildController extends Controller
             'guardians.*.relationship'      => ['nullable', 'string'],
             'guardians.*.contact_number'    => ['nullable', 'string'],
             'guardians.*.address'           => ['nullable', 'string'],
-        ]);
+        ];
+
+        if ($creating) {
+            // optional on create; must be unique when entered
+            $rules['child_code'] = ['nullable', 'string', 'max:30', 'regex:/^[A-Za-z0-9\-]+$/', 'unique:children,child_code'];
+        }
+
+        return $request->validate($rules);
     }
 
     private function log(Request $request, string $action, int $childId): void

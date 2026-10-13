@@ -115,12 +115,13 @@ class QrAttendanceTest extends KfhiTestCase
 
     // ---------------- attendance ----------------
 
-    public function test_enumerator_records_attendance_once_and_sees_only_code_and_name(): void
+       public function test_enumerator_records_attendance_once_and_sees_only_code_and_name(): void
     {
         $event = $this->openEvent();
         $child = $this->makeChild('Education');
         $token = $this->qrTokenFor($child);
         $enum  = $this->makeUser('survey_enumerator', ['Education']);
+        $event->users()->attach($enum->id);
 
         $this->asUser($enum)->postJson("/api/events/{$event->id}/attendance/scan", ['token' => $token])
             ->assertOk()
@@ -150,17 +151,19 @@ class QrAttendanceTest extends KfhiTestCase
         DB::table('attendances')->insert($row);
     }
 
-    public function test_attendance_is_refused_when_event_is_closed_or_attendance_is_off(): void
+        public function test_attendance_is_refused_when_event_is_closed_or_attendance_is_off(): void
     {
         $child = $this->makeChild('Education');
         $token = $this->qrTokenFor($child);
         $enum  = $this->makeUser('survey_enumerator', ['Education']);
 
         $completed = $this->openEvent(['status' => 'completed']);
+        $completed->users()->attach($enum->id);
         $this->asUser($enum)->postJson("/api/events/{$completed->id}/attendance/scan", ['token' => $token])
             ->assertStatus(422);
 
         $off = $this->openEvent(['name' => 'No QR', 'qr_attendance_enabled' => false]);
+        $off->users()->attach($enum->id);
         $this->asUser($enum)->postJson("/api/events/{$off->id}/attendance/scan", ['token' => $token])
             ->assertStatus(422);
 
@@ -178,10 +181,11 @@ class QrAttendanceTest extends KfhiTestCase
         $this->assertSame(0, Attendance::count());
     }
 
-    public function test_attendance_for_a_child_outside_your_programs_or_archived_is_refused(): void
+       public function test_attendance_for_a_child_outside_your_programs_or_archived_is_refused(): void
     {
         $event = $this->openEvent();
         $enum  = $this->makeUser('survey_enumerator', ['Education']);
+        $event->users()->attach($enum->id);
 
         $outside = $this->makeChild('Health');
         $this->asUser($enum)->postJson("/api/events/{$event->id}/attendance/scan", ['token' => $this->qrTokenFor($outside)])

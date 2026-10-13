@@ -1,14 +1,14 @@
-/* KFHI CMS – application shell: login, role-aware menu, hash router, idle logout */
+/* KFHI CMS – application shell: login, permission-based sidebar, hash router, idle logout */
 (function (K) {
   const root = document.getElementById('app');
   const IDLE_MS = K.IDLE_MINUTES * 60 * 1000;
   const ACTIVITY = ['mousemove', 'keydown', 'click', 'touchstart', 'scroll'];
   const HOME = K.base.replace(/\/api\/?$/, '/');          // public home page URL
   const LOGO = HOME + 'images/kfhi-logo.png';             // put your logo at public/images/kfhi-logo.png
-  const ICONS = { dashboard: 'fa-house', children: 'fa-child-reaching' };   // fallback icons per page key
+  const ICONS = { dashboard: 'fa-table-columns', children: 'fa-child-reaching' };   // fallback icons per page key
   let idleTimer = null;
 
-  // ---------- logo (falls back to text if the file is missing) ----------
+  // ---------- small helpers ----------
   const logoImg = () => `<img class="brand-logo" src="${K.esc(LOGO)}" alt="KFHI">`;
   function logoFallback(scope) {
     scope.querySelectorAll('img.brand-logo').forEach(img =>
@@ -19,6 +19,8 @@
         img.replaceWith(s);
       }, { once: true }));
   }
+  const initials = name => String(name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  const pretty = r => { const s = String(r).replace(/_/g, ' '); return s.charAt(0).toUpperCase() + s.slice(1); };
 
   // ---------- idle auto-logout ----------
   function resetIdle() {
@@ -75,7 +77,8 @@
     });
   }
 
-  // ---------- shell ----------
+  // ---------- shell: sidebar + top bar ----------
+  /** Pages the current user may open (permission-based) – this is what builds the sidebar. */
   function visiblePages() {
     return Object.entries(K.pages)
       .filter(([, p]) => !p.perm || K.can(p.perm))
@@ -84,22 +87,57 @@
 
   function renderShell() {
     const u = K.session.user;
+    const roleLabel = (u.roles || []).map(pretty).join(', ');
+
+    let lastGroup = null;
+    const links = visiblePages().map(([key, p]) => {
+      let head = '';
+      if (p.group && p.group !== lastGroup) { head = `<div class="sb-group">${K.esc(p.group)}</div>`; }
+      if (p.group) lastGroup = p.group;
+      return `${head}<a class="sb-link" data-page="${K.esc(key)}" href="#/${K.esc(key)}">
+        <i class="fa-solid ${K.esc(p.icon || ICONS[key] || 'fa-circle')}"></i><span>${K.esc(p.title)}</span></a>`;
+    }).join('');
+
     root.innerHTML = `
-      <nav class="navbar navbar-expand-md navbar-dark kfhi-nav">
-        <a class="navbar-brand m-0" href="#/dashboard">${logoImg()}</a>
-        <button class="navbar-toggler border-0" data-bs-toggle="collapse" data-bs-target="#nav"><span class="navbar-toggler-icon"></span></button>
-        <div class="collapse navbar-collapse" id="nav">
-          <ul class="navbar-nav ms-auto me-md-3 mt-3 mt-md-0">
-            ${visiblePages().map(([key, p]) => `
-              <li class="nav-item"><a class="nav-link" data-page="${K.esc(key)}" href="#/${K.esc(key)}">
-                <i class="fa-solid ${K.esc(p.icon || ICONS[key] || 'fa-circle')}"></i><span>${K.esc(p.title)}</span></a></li>`).join('')}
-          </ul>
-          <span class="user-chip"><i class="fa-solid fa-user"></i> ${K.esc(u.name)}</span>
-          <button class="btn-logout" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Log out</button>
+      <div class="app-shell">
+        <aside class="sidebar" id="sidebar">
+          <div class="sb-brand">
+            <a href="#/dashboard">${logoImg()}</a>
+            <div><div class="sb-brand-title">KFHI CMS</div><div class="sb-brand-sub">Child ID &amp; Records</div></div>
+          </div>
+          <nav class="sb-nav">${links}</nav>
+          <div class="sb-foot">Access to every record is logged. Only authorized KFHI staff may view child information.</div>
+        </aside>
+        <div class="sb-backdrop" id="sbBackdrop"></div>
+
+        <div class="app-main">
+          <header class="topbar">
+            <button class="sb-toggle" id="sbToggle" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+            <div class="topbar-title">
+              <strong>KFHI Child Digital ID &amp; Information Management System</strong>
+              <small>Secure QR-based identification &amp; records platform</small>
+            </div>
+            <div class="topbar-user">
+              <div class="u-meta"><div class="u-name">${K.esc(u.name)}</div><div class="u-role">${K.esc(roleLabel)}</div></div>
+              <div class="avatar">${K.esc(initials(u.name))}</div>
+              <button class="btn-icon" id="logoutBtn" title="Log out" aria-label="Log out"><i class="fa-solid fa-right-from-bracket"></i></button>
+            </div>
+          </header>
+          <main id="view"></main>
         </div>
-      </nav>
-      <main id="view"></main>`;
+      </div>`;
     logoFallback(root);
+
+    // mobile: open / close the sidebar
+    const sidebar = root.querySelector('#sidebar');
+    const backdrop = root.querySelector('#sbBackdrop');
+    const closeSidebar = () => { sidebar.classList.remove('open'); backdrop.classList.remove('show'); };
+    root.querySelector('#sbToggle').addEventListener('click', () => {
+      sidebar.classList.toggle('open'); backdrop.classList.toggle('show');
+    });
+    backdrop.addEventListener('click', closeSidebar);
+    sidebar.addEventListener('click', e => { if (e.target.closest('.sb-link')) closeSidebar(); });
+
     root.querySelector('#logoutBtn').addEventListener('click', logout);
   }
 
@@ -111,7 +149,7 @@
     const [name, ...params] = (location.hash.replace(/^#\/?/, '') || 'dashboard').split('/');
     const page = K.pages[name];
 
-    root.querySelectorAll('.nav-link').forEach(a => a.classList.toggle('active', a.dataset.page === name));
+    root.querySelectorAll('.sb-link').forEach(a => a.classList.toggle('active', a.dataset.page === name));
 
     if (!page || (page.perm && !K.can(page.perm))) {
       view.innerHTML = K.alert('Page not found or you do not have access to it.', 'warning');
@@ -127,6 +165,15 @@
 
   // ---------- lifecycle ----------
   function enterApp() {
+    if (K.session.user.must_change_password) {
+      stopIdleWatch();
+      K.forcePasswordChange(root, () => {
+        K.session.user.must_change_password = false;
+        enterApp();
+      }, logout);
+      return;
+    }
+
     renderShell();
     startIdleWatch();
     if (!location.hash) { location.hash = '#/dashboard'; }   // triggers route() via hashchange
