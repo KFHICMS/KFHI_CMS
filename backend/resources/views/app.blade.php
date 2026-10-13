@@ -17,9 +17,11 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ asset('js/kfhi/api.js') }}"></script>
     <script src="{{ asset('js/kfhi/ui.js') }}"></script>
+    <script src="{{ asset('js/kfhi/password.js') }}"></script>
     {{-- Page modules: each registers itself in KFHI.pages. Add new modules here. --}}
     <script src="{{ asset('js/kfhi/pages/dashboard.js') }}"></script>
     <script src="{{ asset('js/kfhi/pages/children.js') }}"></script>
+    <script src="{{ asset('js/kfhi/pages/users.js') }}"></script>
     <script src="{{ asset('js/kfhi/app.js') }}"></script>
 </body>
 </html>

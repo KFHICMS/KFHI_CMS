@@ -1,26 +1,33 @@
 (function (K) {
-  const FIELDS = [
-    ['child_code', 'Child code'], ['full_name', 'Full name'], ['date_of_birth', 'Date of birth'],
-    ['gender', 'Gender'], ['address', 'Address'], ['program', 'Program'],
-    ['registration_date', 'Registration date'], ['school', 'School'], ['grade', 'Grade'],
-    ['education_status', 'Education status'], ['participation_details', 'Participation'],
+    const FIELDS = [
+    ['child_code', 'Child code'], ['full_name', 'Child name (English)'], ['name_korean', 'Child name (Korean)'],
+    ['alias', 'Alias'], ['date_of_birth', 'Birthday'], ['age', 'Age'], ['gender', 'Gender'],
+    ['religion', 'Religion'], ['address', 'Address'], ['area', 'Area'], ['gnd', 'GND / Grama Niladhari Division'],
+    ['office_code', 'Office code'], ['office_name', 'Office name'], ['service_state', 'Service state'],
+    ['sponsor_state', 'Sponsor state'], ['guardian_type', 'Guardian type'], ['caregiver', 'Caregiver'],
+    ['program', 'Program'], ['registration_date', 'Registration date'], ['school', 'School'],
+    ['curriculum', 'Curriculum'], ['grade', 'Grade'], ['education_status', 'Education status'],
+    ['favorite_subject', 'Favorite subject'], ['pass_fail', 'Pass / Fail'], ['dream', 'Dream'],
+    ['dream_description', 'Dream description'], ['favorite_activity', 'Favorite activity'],
+    ['participation_details', 'Participation'],
   ];
   const SENSITIVE = [
-    ['medical_info', 'Medical information'], ['special_requirements', 'Special requirements'],
-    ['emergency_contacts', 'Emergency contacts'],
+    ['health', 'Health'], ['medical_info', 'Health description'],
+    ['disability_type', 'Disability type'], ['disability_description', 'Disability description'],
+    ['special_requirements', 'Special requirements'], ['emergency_contacts', 'Emergency contacts'],
   ];
 
   K.pages.children = {
-    title: 'Children',
+    title: 'Child Management',
     perm: 'view_children',
-    order: 2,
+    order: 3,
 
     async render(el) {
       const state = { q: '', program: '', status: 'active', page: 1 };
 
       el.innerHTML = `
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <h1 class="h4 mb-0">Children</h1>
+        <h1 class="h4 mb-0">Child Management</h1>
         </div>
         <div class="row g-2 mb-3">
           <div class="col-12 col-md-5"><input id="q" class="form-control" placeholder="Search by name or child code"></div>

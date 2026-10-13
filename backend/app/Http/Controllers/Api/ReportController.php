@@ -57,4 +57,49 @@ class ReportController extends Controller
             BenefitType::withCount('benefits')->get(['id', 'name'])
         );
     }
+
+        // GET /api/reports/dashboard
+    public function dashboard()
+    {
+        $now   = now();
+        $today = today();
+
+        // Events that are not cancelled/archived
+        $events = fn () => Event::whereNotIn('status', ['cancelled', 'archived']);
+
+        $totalEvents = $events()->count();
+
+        // To do = active events that have not started yet
+        $toDo = $events()->where('status', 'active')->where(function ($q) use ($now, $today) {
+            $q->where('start_at', '>', $now)
+              ->orWhere(fn ($q) => $q->whereNull('start_at')->whereDate('event_date', '>', $today));
+        })->count();
+
+        // In progress = active events happening right now
+        $inProgress = $events()->where('status', 'active')->where(function ($q) use ($now, $today) {
+            $q->where(fn ($q) => $q->where('start_at', '<=', $now)
+                    ->where(fn ($q) => $q->whereNull('end_at')->orWhere('end_at', '>=', $now)))
+              ->orWhere(fn ($q) => $q->whereNull('start_at')->whereDate('event_date', $today));
+        })->count();
+
+        // Completed = everything else (finished, closed, or undated), so nothing is counted twice
+        $completed = max(0, $totalEvents - $toDo - $inProgress);
+
+        return response()->json([
+            'cards' => [
+                'children' => Child::where('status', 'active')->count(),
+                'programs' => Program::whereNotIn('status', ['cancelled', 'archived'])->count(),
+                'events'   => $totalEvents,
+                'users'    => User::where('is_active', true)->count(),
+            ],
+            'activities' => [
+                'to_do'       => $toDo,
+                'in_progress' => $inProgress,
+                'completed'   => $completed,
+            ],
+            'pending' => [
+                'follow_ups' => FollowUp::where('status', 'pending')->count(),
+            ],
+        ]);
+    }
 }

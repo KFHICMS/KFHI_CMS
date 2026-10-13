@@ -26,13 +26,18 @@ class UserController extends Controller
         return response()->json(Role::orderBy('name')->pluck('name'));
     }
 
-    // POST /api/users
+        // POST /api/users
     public function store(Request $request)
     {
+        $this->normaliseUsername($request);
+
         $data = $request->validate([
             'name'          => ['required', 'string', 'max:255'],
+            'username'      => ['nullable', 'string', 'min:3', 'max:50', 'regex:/^[a-z0-9._-]+$/', 'unique:users,username'],
             'email'         => ['required', 'email', 'unique:users,email'],
+            'phone'         => ['nullable', 'string', 'max:30', 'regex:/^[0-9+()\-\s]{7,30}$/'],
             'password'      => ['required', 'string', Password::min(8)->mixedCase()->numbers()],
+            'must_change_password' => ['sometimes', 'boolean'],
             'role'          => ['required', 'string', Rule::in(Role::pluck('name')->toArray())],
             'program_ids'   => ['sometimes', 'array'],
             'program_ids.*' => ['integer', 'exists:programs,id'],
@@ -40,9 +45,12 @@ class UserController extends Controller
 
         $user = User::create([
             'name'      => $data['name'],
+            'username'  => $data['username'] ?? $this->uniqueUsername($data['email']),
             'email'     => $data['email'],
+            'phone'     => $data['phone'] ?? null,
             'password'  => $data['password'],   // hashed by the model cast
             'is_active' => true,
+            'must_change_password' => $data['must_change_password'] ?? true,
         ]);
         $user->assignRole($data['role']);
         if (isset($data['program_ids'])) {
@@ -54,23 +62,33 @@ class UserController extends Controller
         return response()->json($this->transform($user->load('programs:id')), 201);
     }
 
-    // PUT /api/users/{user}
+       // PUT /api/users/{user}
     public function update(Request $request, User $user)
     {
+        $this->normaliseUsername($request);
+
         $data = $request->validate([
             'name'          => ['sometimes', 'string', 'max:255'],
+            'username'      => ['sometimes', 'string', 'min:3', 'max:50', 'regex:/^[a-z0-9._-]+$/', Rule::unique('users', 'username')->ignore($user->id)],
             'email'         => ['sometimes', 'email', Rule::unique('users', 'email')->ignore($user->id)],
+            'phone'         => ['sometimes', 'nullable', 'string', 'max:30', 'regex:/^[0-9+()\-\s]{7,30}$/'],
             'password'      => ['sometimes', 'string', Password::min(8)->mixedCase()->numbers()],
             'role'          => ['sometimes', 'string', Rule::in(Role::pluck('name')->toArray())],
             'program_ids'   => ['sometimes', 'array'],
             'program_ids.*' => ['integer', 'exists:programs,id'],
         ]);
 
-        if (isset($data['name']))  $user->name = $data['name'];
-        if (isset($data['email'])) $user->email = $data['email'];
-        if (isset($data['password'])) {
+        if (isset($data['name']))     $user->name = $data['name'];
+        if (isset($data['email']))    $user->email = $data['email'];
+        if (isset($data['username'])) $user->username = $data['username'];
+        if (array_key_exists('phone', $data)) $user->phone = $data['phone'];
+
+        $passwordReset = isset($data['password']);
+        if ($passwordReset) {
             $user->password = $data['password'];
-            $user->tokens()->delete();          // force re-login after a password reset
+            // admin-set password is temporary, unless the admin edits their own account
+            $user->must_change_password = $user->id !== $request->user()->id;
+            $user->tokens()->delete();
         }
         $user->save();
 
@@ -82,6 +100,9 @@ class UserController extends Controller
         }
 
         $this->log($request, 'UPDATE_USER', $user->id);
+        if ($passwordReset) {
+            $this->log($request, 'RESET_USER_PASSWORD', $user->id);
+        }
 
         return response()->json($this->transform($user->fresh()->load('programs:id')));
     }
@@ -108,17 +129,40 @@ class UserController extends Controller
         return response()->json(['message' => 'User activated']);
     }
 
-    // ---- helpers ----
-    private function transform(User $u): array
+        private function transform(User $u): array
     {
         return [
             'id'          => $u->id,
             'name'        => $u->name,
+            'username'    => $u->username,
             'email'       => $u->email,
+            'phone'       => $u->phone,
+            'has_photo'   => (bool) $u->profile_photo_path,
             'is_active'   => $u->is_active,
+            'must_change_password' => (bool) $u->must_change_password,
+            'date_joined' => $u->created_at,
             'roles'       => $u->getRoleNames(),
             'program_ids' => $u->programs->pluck('id'),
         ];
+    }
+        private function normaliseUsername(Request $request): void
+    {
+        if ($request->has('username') && is_string($request->input('username'))) {
+            $request->merge(['username' => strtolower(trim($request->input('username')))]);
+        }
+    }
+
+    private function uniqueUsername(string $email): string
+    {
+        $base = strtolower(preg_replace('/[^A-Za-z0-9._-]/', '', strstr($email, '@', true) ?: $email));
+        $base = substr($base !== '' ? $base : 'user', 0, 40);
+
+        $name = $base;
+        for ($i = 2; User::where('username', $name)->exists(); $i++) {
+            $name = $base . $i;
+        }
+
+        return $name;
     }
 
     private function log(Request $request, string $action, int $id): void

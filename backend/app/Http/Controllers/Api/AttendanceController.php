@@ -16,6 +16,7 @@ class AttendanceController extends Controller
     // POST /api/events/{event}/attendance/scan   { token }
     public function scan(Request $request, Event $event)
     {
+        abort_unless($event->isAccessibleTo($request->user()), 403, 'You are not assigned to this event.');
         $request->validate(['token' => ['required', 'string']]);
 
         if ($event->status !== 'active' || ! $event->qr_attendance_enabled) {
@@ -73,10 +74,12 @@ class AttendanceController extends Controller
         ]);
     }
 
-    // GET /api/events/{event}/attendance   (view the list)
+        // GET /api/events/{event}/attendance   (view the list)
     public function index(Request $request, Event $event)
     {
         $user = $request->user();
+
+        abort_unless($event->isAccessibleTo($user), 403, 'You are not assigned to this event.');
 
         $records = $event->attendances()
             ->whereHas('child', fn ($q) => $q->accessibleTo($user))

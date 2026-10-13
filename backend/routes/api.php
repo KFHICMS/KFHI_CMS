@@ -18,10 +18,11 @@ use App\Http\Controllers\Api\FollowUpController;
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
 
 // Protected (requires a valid token)
-Route::middleware(['auth:sanctum', 'active'])->group(function () {
+Route::middleware(['auth:sanctum', 'active', 'password.changed'])->group(function () {
     // Auth
     Route::get ('/me',     [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/change-password', [AuthController::class, 'changePassword'])->middleware('throttle:5,1');
 
     Route::get('/roles', [UserController::class, 'roles'])->middleware('permission:manage_users');
     Route::get   ('/users',                   [UserController::class, 'index'])->middleware('permission:manage_users');
@@ -85,6 +86,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
 
   // Reports — admin + child officer
   Route::get('/reports/summary',       [ReportController::class, 'summary'])->middleware('permission:view_reports');
+  Route::get('/reports/dashboard',     [ReportController::class, 'dashboard'])->middleware('permission:view_reports');
   Route::get('/reports/registrations', [ReportController::class, 'registrations'])->middleware('permission:view_reports');
   Route::get('/reports/participation', [ReportController::class, 'participation'])->middleware('permission:view_reports');
   Route::get('/reports/benefits',      [ReportController::class, 'benefits'])->middleware('permission:view_reports');

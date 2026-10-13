@@ -28,6 +28,7 @@ class RolePermissionSeeder extends Seeder
             'scan_qr',
             // Programs & activities
             'manage_programs',
+            'manage_event_options',
             'manage_activities',
             'record_attendance',
             'record_benefits',
