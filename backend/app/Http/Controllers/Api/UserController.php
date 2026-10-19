@@ -88,7 +88,13 @@ class UserController extends Controller
             $user->password = $data['password'];
             // admin-set password is temporary, unless the admin edits their own account
             $user->must_change_password = $user->id !== $request->user()->id;
-            $user->tokens()->delete();
+
+            $current = $user->currentAccessToken();
+            $others  = $user->tokens();
+            if ($current && isset($current->id)) {
+                $others = $others->where('id', '!=', $current->id);
+            }
+            $others->delete();
         }
         $user->save();
 

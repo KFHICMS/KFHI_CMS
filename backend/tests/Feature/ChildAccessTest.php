@@ -81,7 +81,11 @@ class ChildAccessTest extends KfhiTestCase
     {
         $officer = $this->makeUser('child_officer');
 
-        $this->asUser($officer)->postJson('/api/children', ['full_name' => 'Amara Perera', 'program' => 'Education'])
+        $this->asUser($officer)->postJson('/api/children', [
+            'child_code' => 'LKA005001',
+            'full_name' => 'Amara Perera',
+            'program' => 'Education',
+        ])
             ->assertCreated();
         $this->assertDatabaseHas('children', ['full_name' => 'Amara Perera']);
 

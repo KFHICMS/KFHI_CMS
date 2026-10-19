@@ -3,16 +3,37 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Program;
 use App\Models\AuditLog;
+use App\Models\Child;
+use App\Models\Event;
+use App\Models\Program;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class ProgramController extends Controller
 {
-    // GET /api/programs
-    public function index()
+    /** Historical and current program states accepted by the API. */
+    private const VALID_STATUSES = ['active', 'completed', 'closed', 'cancelled', 'archived'];
+
+    // GET /api/programs   (people who manage programs also get real child / event counts)
+    public function index(Request $request)
     {
-        return response()->json(Program::latest()->get());
+        $programs = Program::latest()->get();
+
+        if (! $request->user()->can('manage_programs')) {
+            return response()->json($programs);
+        }
+
+        $children = Child::where('status', 'active')->whereNotNull('program')
+            ->selectRaw('program, COUNT(*) as total')->groupBy('program')->pluck('total', 'program');
+        $events = Event::whereNotNull('program_id')
+            ->selectRaw('program_id, COUNT(*) as total')->groupBy('program_id')->pluck('total', 'program_id');
+
+        return response()->json($programs->map(fn ($p) => array_merge($p->toArray(), [
+            'children_count' => (int) ($children[$p->name] ?? 0),
+            'events_count'   => (int) ($events[$p->id] ?? 0),
+        ]))->values());
     }
 
     // GET /api/programs/{program}
@@ -25,7 +46,7 @@ class ProgramController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'        => ['required', 'string', 'max:255'],
+            'name'        => ['required', 'string', 'max:255', Rule::unique('programs', 'name')],
             'description' => ['nullable', 'string'],
             'start_date'  => ['nullable', 'date'],
             'end_date'    => ['nullable', 'date', 'after_or_equal:start_date'],
@@ -42,17 +63,29 @@ class ProgramController extends Controller
     public function update(Request $request, Program $program)
     {
         $data = $request->validate([
-            'name'        => ['sometimes', 'string', 'max:255'],
+            'name'        => ['sometimes', 'string', 'max:255', Rule::unique('programs', 'name')->ignore($program->id)],
             'description' => ['nullable', 'string'],
             'start_date'  => ['nullable', 'date'],
             'end_date'    => ['nullable', 'date', 'after_or_equal:start_date'],
-            'status'      => ['sometimes', 'in:active,completed,archived'],
+            'status'      => ['sometimes', 'in:' . implode(',', self::VALID_STATUSES)],
         ]);
 
-        $program->update($data);
-        $this->log($request, 'UPDATE_PROGRAM', $program->id);
+        $oldName = $program->name;
 
-        return response()->json($program);
+        // Children and officers are linked by program NAME, so a rename must carry the children
+        // with it, otherwise field officers would silently lose access to them.
+        DB::transaction(function () use ($program, $data, $oldName) {
+            $program->update($data);
+
+            if (isset($data['name']) && $data['name'] !== $oldName) {
+                Child::where('program', $oldName)->update(['program' => $data['name']]);
+            }
+        });
+
+        $renamed = isset($data['name']) && $data['name'] !== $oldName;
+        $this->log($request, 'UPDATE_PROGRAM', $program->id, $renamed ? "Renamed from \"$oldName\"" : null);
+
+        return response()->json($program->fresh());
     }
 
     // PATCH /api/programs/{program}/archive
@@ -60,10 +93,11 @@ class ProgramController extends Controller
     {
         $program->update(['status' => 'archived']);
         $this->log($request, 'ARCHIVE_PROGRAM', $program->id);
+
         return response()->json(['message' => 'Program archived']);
     }
 
-    private function log(Request $request, string $action, int $id): void
+    private function log(Request $request, string $action, int $id, ?string $details = null): void
     {
         AuditLog::create([
             'user_id'     => $request->user()->id,
@@ -71,6 +105,7 @@ class ProgramController extends Controller
             'entity_type' => 'Program',
             'entity_id'   => $id,
             'ip_address'  => $request->ip(),
+            'details'     => $details,
         ]);
     }
 }

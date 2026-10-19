@@ -17,6 +17,9 @@ class EventController extends Controller
     /** Roles that may be assigned to an event. */
     private const ASSIGNABLE_ROLES = ['child_officer', 'field_officer', 'survey_enumerator'];
 
+    /** Legacy and current event states. */
+    private const VALID_STATUSES = ['active', 'completed', 'closed', 'cancelled', 'archived'];
+
     // GET /api/events
          // GET /api/events   (enumerators only see the events they are assigned to)
     public function index(Request $request)
@@ -25,7 +28,7 @@ class EventController extends Controller
         $with = $user->can('manage_programs') ? ['program:id,name', 'users:id'] : ['program:id,name'];
 
         return response()->json(
-            Event::accessibleTo($user)->with($with)->latest()->get()->map(fn ($e) => $this->present($e, $user))
+            Event::accessibleTo($user)->with($with)->withCount('attendances')->latest()->get()->map(fn ($e) => $this->present($e, $user))
         );
     }
 
@@ -128,7 +131,7 @@ class EventController extends Controller
         ];
 
         if ($updating) {
-            $rules['status'] = ['sometimes', 'in:active,completed,archived'];
+            $rules['status'] = ['sometimes', 'in:' . implode(',', self::VALID_STATUSES)];
         }
 
         return $rules;

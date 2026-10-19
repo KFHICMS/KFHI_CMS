@@ -18,10 +18,16 @@
     <script src="{{ asset('js/kfhi/api.js') }}"></script>
     <script src="{{ asset('js/kfhi/ui.js') }}"></script>
     <script src="{{ asset('js/kfhi/password.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <script src="{{ asset('js/kfhi/categories.js') }}"></script>
+    <script src="{{ asset('js/kfhi/messages.js') }}"></script>
+    <script src="{{ asset('js/kfhi/monthly.js') }}"></script>
     {{-- Page modules: each registers itself in KFHI.pages. Add new modules here. --}}
     <script src="{{ asset('js/kfhi/pages/dashboard.js') }}"></script>
     <script src="{{ asset('js/kfhi/pages/children.js') }}"></script>
     <script src="{{ asset('js/kfhi/pages/users.js') }}"></script>
+    <script src="{{ asset('js/kfhi/idcard.js') }}"></script>
     <script src="{{ asset('js/kfhi/app.js') }}"></script>
 </body>
 </html>

@@ -10,4 +10,8 @@ class Attendance extends Model
 
     public function child() { return $this->belongsTo(Child::class); }
     public function event() { return $this->belongsTo(Event::class); }
+    public function markedBy()
+    {
+        return $this->belongsTo(User::class, 'marked_by');
+    }
 }

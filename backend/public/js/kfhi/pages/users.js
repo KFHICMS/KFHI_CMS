@@ -49,13 +49,13 @@
         <div id="list"></div>
 
         <!-- add / edit -->
-        <div class="modal fade" id="userModal" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content">
-          <form id="userForm" novalidate>
+        <div class="modal fade" id="userModal" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable">
+          <form class="modal-content" id="userForm" novalidate>
             <div class="modal-header"><h5 class="modal-title" id="userTitle"></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body" id="userBody"></div>
             <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
               <button class="btn btn-primary" id="userSave">Save</button></div>
-          </form></div></div></div>
+          </form></div></div>
 
         <!-- reset password -->
         <div class="modal fade" id="pwModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
@@ -154,6 +154,7 @@
               <td class="d-none d-lg-table-cell">${K.esc(K.date(u.date_joined))}</td>
               <td class="text-end text-nowrap">
                 <button class="btn btn-sm btn-outline-primary" data-act="edit" data-id="${K.esc(u.id)}">Edit</button>
+                ${isMe || !u.is_active ? '' : `<button class="btn btn-sm btn-outline-secondary" data-act="message" data-id="${K.esc(u.id)}">Message</button>`}
                 <button class="btn btn-sm btn-outline-warning" data-act="reset" data-id="${K.esc(u.id)}">Reset password</button>
                 ${isMe ? '' : u.is_active
                   ? `<button class="btn btn-sm btn-outline-danger" data-act="deactivate" data-id="${K.esc(u.id)}">Deactivate</button>`
@@ -170,6 +171,7 @@
         if (!u) return;
         if (btn.dataset.act === 'edit') openForm(u);
         if (btn.dataset.act === 'reset') openReset(u);
+        if (btn.dataset.act === 'message') K.composeMessage({ id: u.id, name: u.name });
         if (btn.dataset.act === 'deactivate') ask(`Deactivate ${u.name}?`,
           'They will be signed out immediately and cannot log in. Their past records are kept.', 'Deactivate',
           () => setActive(u, false));
