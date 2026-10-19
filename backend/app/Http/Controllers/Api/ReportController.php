@@ -97,9 +97,81 @@ class ReportController extends Controller
                 'in_progress' => $inProgress,
                 'completed'   => $completed,
             ],
+            'categories' => $this->categoryCounts(),
             'pending' => [
                 'follow_ups' => FollowUp::where('status', 'pending')->count(),
             ],
+        ]);
+    }
+
+        // Each child is counted once per category they are assigned to. Archived children are excluded.
+    private function categoryCounts(): array
+    {
+        $rows = \App\Models\ChildCategory::query()
+            ->join('children', 'children.id', '=', 'child_categories.child_id')
+            ->where('children.status', 'active')
+            ->groupBy('child_categories.category')
+            ->selectRaw('child_categories.category as category, COUNT(DISTINCT child_categories.child_id) as total')
+            ->pluck('total', 'category');
+
+        $out = [];
+        foreach (\App\Models\ChildCategory::OPTIONS as $category) {
+            $out[$category] = (int) ($rows[$category] ?? 0);
+        }
+
+        return $out;
+    }
+
+        // GET /api/reports/monthly?month=2026-10
+    public function monthly(Request $request)
+    {
+        $data = $request->validate(['month' => ['sometimes', 'date_format:Y-m']]);
+
+        $start = isset($data['month'])
+            ? \Illuminate\Support\Carbon::createFromFormat('!Y-m', $data['month'])->startOfMonth()
+            : now()->startOfMonth();
+        $end   = $start->copy()->endOfMonth();
+        $now   = now();
+        $today = today();
+
+        // Events dated in this month (not cancelled / archived).
+        // An event's date is start_at, or event_date when it has no start time.
+        $inMonth = fn () => Event::whereNotIn('status', ['cancelled', 'archived'])
+            ->where(function ($q) use ($start, $end) {
+                $q->whereBetween('start_at', [$start, $end])
+                  ->orWhere(fn ($q) => $q->whereNull('start_at')
+                      ->whereBetween('event_date', [$start->toDateString(), $end->toDateString()]));
+            });
+
+        $scheduled = $inMonth()->count();
+
+        $upcoming = $inMonth()->where('status', 'active')->where(function ($q) use ($now, $today) {
+            $q->where('start_at', '>', $now)
+              ->orWhere(fn ($q) => $q->whereNull('start_at')->whereDate('event_date', '>', $today));
+        })->count();
+
+        $inProgress = $inMonth()->where('status', 'active')->where(function ($q) use ($now, $today) {
+            $q->where(fn ($q) => $q->where('start_at', '<=', $now)
+                    ->where(fn ($q) => $q->whereNull('end_at')->orWhere('end_at', '>=', $now)))
+              ->orWhere(fn ($q) => $q->whereNull('start_at')->whereDate('event_date', $today));
+        })->count();
+
+        $completed = max(0, $scheduled - $upcoming - $inProgress);
+
+        return response()->json([
+            'month'               => $start->format('Y-m'),
+            'label'               => $start->format('F Y'),
+            'children_registered' => Child::whereBetween('created_at', [$start, $end])->count(),
+            'programs_created'    => Program::whereBetween('created_at', [$start, $end])->count(),
+            'programs_updated'    => Program::whereBetween('updated_at', [$start, $end])
+                                        ->whereNotBetween('created_at', [$start, $end])
+                                        ->whereColumn('updated_at', '>', 'created_at')->count(),
+            'events_scheduled'    => $scheduled,
+            'events_held'         => $inProgress + $completed,
+            'attendance_records'  => Attendance::whereBetween('created_at', [$start, $end])->count(),
+            'questionnaire_submissions' => null,   // module not built yet: reported as unavailable, never as 0
+            'activities'          => ['completed' => $completed, 'outstanding' => $upcoming + $inProgress],
+            'completion_rate'     => $scheduled > 0 ? (int) round($completed / $scheduled * 100) : null,
         ]);
     }
 }

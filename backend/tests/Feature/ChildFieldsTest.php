@@ -75,12 +75,14 @@ class ChildFieldsTest extends KfhiTestCase
             ->assertStatus(422)->assertJsonValidationErrors('child_code');
     }
 
-    public function test_child_code_is_generated_when_not_entered(): void
+    public function test_child_code_is_required_and_never_generated(): void
     {
-        $res = $this->asUser($this->makeUser('child_officer'))
-            ->postJson('/api/children', ['full_name' => 'No Code Child'])->assertCreated();
+        $this->asUser($this->makeUser('child_officer'))
+            ->postJson('/api/children', ['full_name' => 'No Code'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('child_code');
 
-        $this->assertNotEmpty($res->json('child_code'));
+        $this->assertDatabaseMissing('children', ['full_name' => 'No Code']);
     }
 
     public function test_child_code_rejects_unsafe_characters(): void

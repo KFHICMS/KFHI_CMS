@@ -8,7 +8,6 @@
       </div>
     </div>`;
 
-  // A shortcut only appears when its page exists and the user is allowed to use it
   const ACTIONS = [
     { label: 'Add Child',      icon: 'fa-child-reaching',  page: 'children', hash: '#/children/new', perm: 'create_child' },
     { label: 'Check Program',  icon: 'fa-diagram-project', page: 'programs', hash: '#/programs',     perm: 'manage_programs' },
@@ -16,11 +15,51 @@
     { label: 'Add Officers',   icon: 'fa-user-plus',       page: 'users',    hash: '#/users/new',    perm: 'manage_users' },
   ];
 
+  const CAT_COLORS = { education: '#2563eb', health: '#e11d48', nutrition: '#f59e0b', shelter: '#0d9488' };
+
   const activityCol = (label, value, color) => `
     <div class="col-4">
       <div class="display-6 fw-bold text-${color}">${K.esc(value)}</div>
       <div class="text-muted small">${K.esc(label)}</div>
     </div>`;
+
+  function drawCategories(box, counts) {
+    const total = Object.values(counts).reduce((a, b) => a + b, 0);
+    if (!total) {
+      box.innerHTML = `<div class="text-muted">No children have been given a category yet.
+        Open a child in Child Management and tick Education, Health, Nutrition or Shelter.</div>`;
+      return;
+    }
+    if (typeof Chart === 'undefined') {   // chart library blocked/offline → plain list
+      box.innerHTML = '<ul class="mb-0">' + K.CATEGORIES.map(([k, l]) =>
+        `<li>${K.esc(l)}: <b>${K.esc(counts[k] || 0)}</b></li>`).join('') + '</ul>';
+      return;
+    }
+    box.innerHTML = '<div style="max-width:340px;margin:0 auto"><canvas id="catChart" aria-label="Children by category" role="img"></canvas></div>';
+    new Chart(box.querySelector('#catChart'), {
+      type: 'doughnut',
+      data: {
+        labels: K.CATEGORIES.map(([k, l]) => `${l} (${counts[k] || 0})`),
+        datasets: [{
+          data: K.CATEGORIES.map(([k]) => counts[k] || 0),
+          backgroundColor: K.CATEGORIES.map(([k]) => CAT_COLORS[k]),
+          borderWidth: 2,
+        }],
+      },
+      options: {
+        cutout: '62%',
+        plugins: {
+          legend: { position: 'bottom' },
+          tooltip: {
+            callbacks: {
+              title: items => K.CATEGORIES[items[0].dataIndex][1],
+              label: ctx => ` ${ctx.parsed} ${ctx.parsed === 1 ? 'child' : 'children'}`,
+            },
+          },
+        },
+      },
+    });
+  }
 
   K.pages.dashboard = {
     title: 'Dashboard',
@@ -79,9 +118,24 @@
                   <div class="d-grid gap-2">${actions || '<span class="text-muted small">No shortcuts available yet.</span>'}</div>
                 </div></div>
               </div>
-            </div>`;
+            </div>
+
+            <div class="row g-4 mt-1">
+              <div class="col-lg-6">
+                <div class="card h-100"><div class="card-body">
+                  <h2 class="h5 mb-3">Children by category</h2>
+                  <div id="catBox"></div>
+                  <div class="text-muted small mt-3">A child can be in several categories, so the segments can add up to more than the number of children. Archived children are not counted.</div>
+                </div></div>
+              </div>
+            </div>
+            <div class="mt-4" id="monthBox"></div>
+            <div class="mt-4" id="msgBox"></div>`;
+
+          drawCategories(stats.querySelector('#catBox'), d.categories || {});
+          K.mountMonthly(stats.querySelector('#monthBox'));
+          K.mountMessages(stats.querySelector('#msgBox'));
         } else {
-          // field officer / enumerator → only what their role can reach
           let cards = '';
           if (K.can('view_children')) {
             const r = await K.api('GET', '/children?per_page=1&status=active');
@@ -89,7 +143,10 @@
           }
           const events = await K.api('GET', '/events');
           cards += cardHtml('Active events', events.filter(e => e.status === 'active').length, 'fa-calendar-check');
-          stats.innerHTML = `<div class="row g-4">${cards}</div>`;
+          stats.innerHTML = `<div class="row g-4">${cards}</div>
+            <div class="mt-4" id="monthBox"></div>
+            <div class="mt-4" id="msgBox"></div>`;
+          K.mountMessages(stats.querySelector('#msgBox'));
         }
       } catch (e) {
         stats.innerHTML = K.alert(e.friendly);

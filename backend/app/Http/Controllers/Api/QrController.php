@@ -105,6 +105,49 @@ class QrController extends Controller
         return response()->json($child->visibleTo($request->user()));
     }
 
+        // GET /api/children/{child}/id-card
+    // Card fields + the CURRENT QR link. Never creates or revokes a QR code, so a card can be reprinted safely.
+    public function idCard(Request $request, Child $child)
+    {
+        abort_unless($child->isAccessibleTo($request->user()), 403, 'This child is outside your assigned programs.');
+        abort_if($child->status !== 'active', 422, 'Archived children do not have an ID card.');
+
+        $qr = QrToken::where('child_id', $child->id)->where('is_active', true)->latest('id')->first();
+
+        AuditLog::create([
+            'user_id'     => $request->user()->id,
+            'action'      => 'VIEW_ID_CARD',
+            'entity_type' => 'Child',
+            'entity_id'   => $child->id,
+            'ip_address'  => $request->ip(),
+        ]);
+
+        return response()->json([
+            // only non-confidential identification fields: no health, disability or emergency data
+            'card' => [
+                'child_code'    => $child->child_code,
+                'full_name'     => $child->full_name,
+                'gnd'           => $child->gnd,
+                'date_of_birth' => $child->date_of_birth?->toDateString(),
+                'age'           => $child->age,
+                'gender'        => $child->gender,
+                'religion'      => $child->religion,
+                'area'          => $child->area,
+                'office_code'   => $child->office_code,
+                'office_name'   => $child->office_name,
+                'service_state' => $child->service_state,
+                'sponsor_state' => $child->sponsor_state,
+                'guardian_type' => $child->guardian_type,
+                'caregiver'     => $child->caregiver,
+                'curriculum'    => $child->curriculum,
+                'has_photo'     => (bool) $child->photo_path,
+            ],
+            'qr' => $qr ? [
+                'scan_url' => rtrim(config('app.scan_url'), '/') . '?t=' . urlencode(Crypt::encryptString($qr->token)),
+            ] : null,
+        ]);
+    }
+
     private function logFail(Request $request, string $reason): void
     {
         AuditLog::create([

@@ -140,7 +140,7 @@ class AuthController extends Controller
         $current = $user->currentAccessToken();
         $others  = $user->tokens();
         if ($current && isset($current->id)) {
-            $others->where('id', '!=', $current->id);
+            $others = $others->where('id', '!=', $current->id);
         }
         $others->delete();
 

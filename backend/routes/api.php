@@ -37,12 +37,27 @@ Route::middleware(['auth:sanctum', 'active', 'password.changed'])->group(functio
     Route::get   ('/children/{child}',         [ChildController::class, 'show'])->middleware('permission:view_children');
     Route::put   ('/children/{child}',         [ChildController::class, 'update'])->middleware('permission:edit_child');
     Route::patch ('/children/{child}/archive', [ChildController::class, 'archive'])->middleware('permission:archive_child');
+    Route::patch ('/children/{child}/restore', [ChildController::class, 'restore'])->middleware('permission:archive_child');
+    Route::post  ('/children/{child}/photo',   [ChildController::class, 'uploadPhoto'])->middleware('permission:edit_child');
+    Route::get   ('/children/{child}/photo',   [ChildController::class, 'photo'])->middleware('permission:view_children');
 
     // QR
     Route::post('/children/{child}/qr', [QrController::class, 'generate'])->middleware('permission:generate_qr');
+    Route::get('/children/{child}/id-card', [QrController::class, 'idCard'])->middleware('permission:generate_qr');
     Route::post('/qr/resolve',          [QrController::class, 'resolve'])->middleware('permission:scan_qr');
 
     // Anyone logged in can view programs
+    Route::get('/children/{child}/categories', [\App\Http\Controllers\Api\ChildCategoryController::class, 'show'])->middleware('permission:view_children');
+    Route::put('/children/{child}/categories', [\App\Http\Controllers\Api\ChildCategoryController::class, 'update'])->middleware('permission:edit_child');
+    // Internal messages: any logged-in user, but only inside their own conversations
+    Route::get   ('/messages/recipients',                [\App\Http\Controllers\Api\MessageController::class, 'recipients']);
+    Route::get   ('/messages/unread-count',              [\App\Http\Controllers\Api\MessageController::class, 'unreadCount']);
+    Route::get   ('/messages',                           [\App\Http\Controllers\Api\MessageController::class, 'index']);
+    Route::post  ('/messages',                           [\App\Http\Controllers\Api\MessageController::class, 'store'])->middleware('throttle:30,1');
+    Route::get   ('/messages/{conversation}',            [\App\Http\Controllers\Api\MessageController::class, 'show']);
+    Route::post  ('/messages/{conversation}/reply',      [\App\Http\Controllers\Api\MessageController::class, 'reply'])->middleware('throttle:60,1');
+    Route::delete('/messages/{conversation}',            [\App\Http\Controllers\Api\MessageController::class, 'destroy']);
+    Route::post  ('/messages/{conversation}/restore',    [\App\Http\Controllers\Api\MessageController::class, 'restore']);
     Route::get('/programs',            [ProgramController::class, 'index']);
     Route::get('/programs/{program}',  [ProgramController::class, 'show']);
 
@@ -87,6 +102,7 @@ Route::middleware(['auth:sanctum', 'active', 'password.changed'])->group(functio
   // Reports — admin + child officer
   Route::get('/reports/summary',       [ReportController::class, 'summary'])->middleware('permission:view_reports');
   Route::get('/reports/dashboard',     [ReportController::class, 'dashboard'])->middleware('permission:view_reports');
+  Route::get('/reports/monthly',       [ReportController::class, 'monthly'])->middleware('permission:view_reports');
   Route::get('/reports/registrations', [ReportController::class, 'registrations'])->middleware('permission:view_reports');
   Route::get('/reports/participation', [ReportController::class, 'participation'])->middleware('permission:view_reports');
   Route::get('/reports/benefits',      [ReportController::class, 'benefits'])->middleware('permission:view_reports');

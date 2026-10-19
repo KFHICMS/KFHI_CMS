@@ -33,8 +33,14 @@ class ChildController extends Controller
             });
         }
 
-        // exact-match filters (all non-sensitive, all indexed or low-cardinality)
-        foreach (['program', 'area', 'office_code', 'gender', 'service_state', 'sponsor_state'] as $filter) {
+        // Area and office code accept partial searches; % and _ are treated as plain text.
+        foreach (['area', 'office_code'] as $filter) {
+            if ($request->filled($filter)) {
+                $query->where($filter, 'like', '%' . addcslashes($request->input($filter), '%_\\') . '%');
+            }
+        }
+
+        foreach (['program', 'gender', 'service_state', 'sponsor_state'] as $filter) {
             if ($request->filled($filter)) {
                 $query->where($filter, $request->input($filter));
             }
@@ -53,11 +59,7 @@ class ChildController extends Controller
     {
         $data = $this->validateChild($request, creating: true);
 
-        // Child Code: use the one entered by staff (e.g. LKA005001); generate one only if left empty.
-        if (empty($data['child_code'])) {
-            $data['child_code'] = 'KFHI-' . date('Y') . '-' .
-                str_pad((int) Child::max('id') + 1, 4, '0', STR_PAD_LEFT);
-        }
+        
         $data['status'] = 'active';
 
         $guardians = $data['guardians'] ?? [];
@@ -86,6 +88,7 @@ class ChildController extends Controller
     public function update(Request $request, Child $child)
     {
         $this->authorizeChild($request, $child);
+        $this->ensureEditable($child);
 
         $data = $this->validateChild($request);
         $guardians = $data['guardians'] ?? null;
@@ -119,10 +122,25 @@ class ChildController extends Controller
         return response()->json(['message' => 'Child archived']);
     }
 
+        // PATCH /api/children/{child}/restore
+    public function restore(Request $request, Child $child)
+    {
+        $this->authorizeChild($request, $child);
+        abort_if($child->status === 'active', 422, 'This child is already active.');
+
+        $child->update(['status' => 'active']);
+        // The old QR codes stay cancelled: a new QR code / ID card has to be generated.
+
+        $this->log($request, 'RESTORE_CHILD', $child->id);
+
+        return response()->json(['message' => 'Child restored']);
+    }
+
     // POST /api/children/{child}/photo   (multipart: photo)
     public function uploadPhoto(Request $request, Child $child)
     {
         $this->authorizeChild($request, $child);
+        $this->ensureEditable($child);
 
         $request->validate([
             'photo' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
@@ -164,6 +182,10 @@ class ChildController extends Controller
             403,
             'This child is outside your assigned programs.'
         );
+    }
+        private function ensureEditable(Child $child): void
+    {
+        abort_if($child->status === 'archived', 422, 'Archived records are read-only. Restore the child first.');
     }
 
     private function validateChild(Request $request, bool $creating = false): array
@@ -210,8 +232,9 @@ class ChildController extends Controller
         ];
 
         if ($creating) {
-            // optional on create; must be unique when entered
-            $rules['child_code'] = ['nullable', 'string', 'max:30', 'regex:/^[A-Za-z0-9\-]+$/', 'unique:children,child_code'];
+           
+            // typed by staff (e.g. LKA005001): required and unique
+            $rules['child_code'] = ['required', 'string', 'max:30', 'regex:/^[A-Za-z0-9\-]+$/', 'unique:children,child_code'];
         }
 
         return $request->validate($rules);
